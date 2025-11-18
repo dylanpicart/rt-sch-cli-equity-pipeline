@@ -1,0 +1,17 @@
+dbt_profile:
+  snowflake_account: "myacct-xy123"
+  snowflake_user: "DBT_USER"
+  snowflake_password: "secret"
+  snowflake_role: "DATA_ENGINEER_ROLE"
+  snowflake_database: "EDU_ANALYTICS"
+  snowflake_warehouse: "COMPUTE_WH"
+  snowflake_schema: "CLIMATE_EQUITY"
+
+metric_query:
+  table_name: "gold.gold_climate_vulnerability"
+  dimension: "borough"
+  metric_column: "emotional_safety_score"
+  metric_alias: "avg_emotional_safety"
+  year: 2024
+  borough: null
+  limit: 10

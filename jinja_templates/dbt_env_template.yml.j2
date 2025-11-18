@@ -1,0 +1,16 @@
+# dbt_env_template.yml.j2
+
+rt_school_climate_equity:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: {{ snowflake_account }}
+      user: {{ snowflake_user }}
+      password: {{ snowflake_password }}
+      role: {{ snowflake_role }}
+      database: {{ snowflake_database }}
+      warehouse: {{ snowflake_warehouse }}
+      schema: {{ snowflake_schema }}
+      threads: 4
+      client_session_keep_alive: false

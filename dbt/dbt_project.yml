@@ -1,0 +1,29 @@
+name: "school_climate"
+version: "1.0.0"
+config-version: 2
+
+profile: "school_climate_profile"     # <-- MUST match profiles.yml
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analysis"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  school_climate:
+    bronze:
+      +schema: "BRONZE"
+      +materialized: view
+
+    silver:
+      +schema: "SILVER"
+      +materialized: table
+
+    gold:
+      +schema: "GOLD"
+      +materialized: table

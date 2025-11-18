@@ -1,0 +1,7 @@
+-- table_schema.sql.j2
+
+create or replace table {{ table_name }} (
+{%- for col in columns %}
+    {{ col.name }} {{ col.type }}{{ "," if not loop.last else "" }}
+{%- endfor %}
+);

@@ -1,0 +1,15 @@
+-- metric_query.sql.j2
+
+select
+    {{ dimension }},
+    avg({{ metric_column }}) as {{ metric_alias }},
+    count(*) as record_count
+from {{ table_name }}
+where year = {{ year }}
+{% if borough %}
+  and borough = '{{ borough }}'
+{% endif %}
+group by {{ dimension }}
+order by {{ metric_alias }} desc
+limit {{ limit | default(50) }}
+;

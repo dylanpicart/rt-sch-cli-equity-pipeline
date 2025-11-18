@@ -1,0 +1,118 @@
+# Environment variables
+.env
+*.env
+.env.*
+!*.env.example
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyd
+*.pkl
+*.pickle
+*.sqlite
+*.db
+
+# Build + packaging
+build/
+dist/
+*.egg-info/
+
+# VS Code settings
+.vscode/
+.settings/
+.idea/
+*.code-workspace
+
+# Local Data
+data/
+!data/README.md  # keep an empty readme if you want to track the structure
+
+# dbt build artifacts
+.dbt/*
+!.dbt/README.md
+dbt/target/
+dbt/logs/
+dbt/manifest.json
+dbt/run_results.json
+dbt/*.pyc
+
+# Spark / Databricks streaming checkpoints
+**/*_checkpoint/
+checkpoint/
+checkpoints/
+
+# Local Spark history/logs
+spark-warehouse/
+derby.log
+
+# Delta Lake logs
+*.delta/
+delta_logs/
+*/_delta_log/
+
+# Kafka logs & data directories
+kafka-logs/
+zookeeper/
+*.log
+
+# Power BI autosaves and backups
+~*.pbix
+*.pbip
+*.rdl.data
+*.rdl.rds
+
+# Generated Jinja2 outputs
+jinja_templates/*.generated.sql
+dbt/profiles.generated.yml
+
+
+# Temporary images
+*.tmp.png
+*.tmp.jpg
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Service account keys
+.secrets/
+*.json
+*.key
+*.pem
+
+# Prevent accidental leakage through OS metadata
+*Zone.Identifier
+*com.dropbox.attrs
+
+# ------------------------------
+# Cloud Assets
+# ------------------------------
+# Local jars (Snowflake connector)
+jars/*.jar
+
+# Prevent accidental staging of any secrets directory anywhere
+**/secret*/ 
+**/*credential*
+**/*password*
+
+# misc
+contracts/*.yml
+what_I_did.txt
