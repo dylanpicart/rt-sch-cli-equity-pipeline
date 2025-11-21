@@ -117,3 +117,4 @@ jars/*.jar
 contracts/*.yml
 what_I_did.txt
 databricks/utils/snowflake_options.py
+scripts/gcp/gcp_cli/dataproc_exec.sh
