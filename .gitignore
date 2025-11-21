@@ -116,3 +116,4 @@ jars/*.jar
 # misc
 contracts/*.yml
 what_I_did.txt
+databricks/utils/snowflake_options.py
