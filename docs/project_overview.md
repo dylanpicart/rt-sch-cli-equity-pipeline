@@ -1,32 +1,33 @@
-# Project Overview  
-## Real-Time Batch & Streaming Data Pipeline (Kafka → Databricks → Snowflake → dbt)
+# Project Overview
 
-This document provides a deeper architectural breakdown of the project, including reasoning behind design choices, scalability considerations, and implementation details.
+## Real-Time Batch & Streaming Data Pipeline (Kafka → Databricks → Snowflake → dbt → Power BI)
 
----
-
-# 1. Goals
-
-This project demonstrates how to build a **production-grade medallion architecture** that harmonizes:
-
-- **Streaming** (Kafka → Bronze)
-- **Batch ingestion** (reference datasets)
-- **Distributed transformations** (Databricks / Spark)
-- **Analytics modeling** (dbt)
-- **Cloud data warehousing** (Snowflake)
-- **BI-ready outputs** (Power BI)
-
-The goal is to illustrate how a modern Data Engineer designs pipelines that are:
-
-- **Reliable**
-- **Scalable**
-- **Testable**
-- **Secure**
-- **Observability-friendly**
+This document provides a deeper architectural breakdown of the project—covering design reasoning, scalability considerations, and implementation details across the full medallion architecture.
 
 ---
 
-# 2. Core Architecture
+## 1. Goals
+
+This project demonstrates how to build a **production-grade medallion architecture** that unifies:
+
+* **Streaming ingestion** (Kafka → Bronze)
+* **Batch ingestion** (reference datasets)
+* **Distributed compute** (Spark on Databricks)
+* **Analytics modeling** (dbt)
+* **Cloud warehousing** (Snowflake)
+* **BI-ready visualizations** (Power BI)
+
+The broader goal: show how modern Data Engineers design pipelines that are:
+
+* **Reliable** — schema-enforced, validated, replayable
+* **Scalable** — autoscaling compute, partition-aware storage
+* **Testable** — dbt tests, Pytest (planned)
+* **Secure** — secret-scoped Snowflake + Kafka configs
+* **Observable** — lineage and monitoring planned (OpenLineage, Prometheus)
+
+---
+
+## 2. Core Architecture
 
 ```text
      ┌───────────────────────┐
@@ -54,80 +55,91 @@ The goal is to illustrate how a modern Data Engineer designs pipelines that are:
 
 ---
 
-# 3. Layer Breakdown
+## 3. Layer Breakdown
 
-## **Bronze Layer (Raw Landing Zone)**  
-Stores raw data exactly as received:
+### **Bronze Layer — Raw Landing (GCS)**
 
-- **Streaming data:** Kafka → Databricks streaming → GCS raw zone  
-- **Batch data:** Uploaded Parquet/CSV reference files  
+Stores raw data exactly as received. Includes:
+
+* **Streaming data:** Kafka → Databricks → GCS
+* **Batch data:** Uploaded reference CSV/Parquet files
 
 Purpose:
-- Retain original fidelity  
-- Allow schema-on-read  
-- Support replay and backfill  
+
+* Preserve original fidelity
+* Allow schema-on-read
+* Support backfills/reprocessing
+* Enable time-travel & debugging
 
 ---
 
-## **Silver Layer (Cleaned & Normalized)**
+### **Silver Layer — Cleaned & Normalized**
 
-Spark in Databricks:
+Processed in Databricks with Spark:
 
-- Enforces schema  
-- Handles late-arriving data  
-- Deduplicates  
-- Converts files to Parquet/Delta  
-- Applies partitioning strategy (e.g., by date or school_id)
+* Enforces schemas
+* Deduplicates and handles late-arriving events
+* Applies normalization (date formats, field standardization)
+* Writes Delta/Parquet
+* Partitions by `event_date` / `school_id` for performance
 
-This layer creates **stable, analytics-friendly tables**.
-
----
-
-## **Gold Layer (Curated Analytics Models)**
-
-dbt in Snowflake:
-
-- Dimension tables: `dim_school`, `dim_borough`, etc.  
-- Fact tables: `fact_event_metrics`, `fact_equity_scores`  
-- Snapshot logic for SCD2 (if needed)  
-- Tests:
-  - unique
-  - not null
-  - accepted values
-  - referential integrity  
-
-Outputs feed Power BI dashboards.
+Outcome: **stable, query-ready datasets**.
 
 ---
 
-# 4. Databricks Configuration (In Progress)
+### **Gold Layer — Curated Analytics Models (Snowflake via dbt)**
 
-## Planned configuration:
-- **DBR Runtime:** 13.x LTS  
-- **Workers:** Autoscaling (min 1, max 4)  
-- **Instance type:** `i3.xlarge` or GCP equivalent (for streaming)  
-- **Cluster mode:** Standard or Single-Node for development  
-- Libraries:
-  - `pyspark`
-  - `delta`
-  - `databricks-kafka` connector  
+dbt models power the curated Snowflake schema:
 
-## Jobs planned:
-1. `kafka_to_bronze_streaming_job`  
-2. `bronze_to_silver_job`  
-3. `silver_to_snowflake_job`  
-4. `dbt_transformations_job`
+* **Dimensions:** `dim_school`, `dim_borough`, `dim_language`, etc.
+* **Facts:** `fact_equity_metrics`, `fact_climate_scores`, etc.
+* **Optional:** SCD2 snapshots for slowly changing dimensions
+
+dbt tests include:
+
+* `unique`
+* `not_null`
+* `accepted_values`
+* referential integrity
+
+These feed directly into the **Power BI dashboard**, now live.
 
 ---
 
-# 5. Snowflake Modeling
+## 4. Databricks Configuration (Nearing Completion)
 
-dbt handles the transformations:
+### Cluster configuration (current)
 
-### Example model structure:
+* **DBR Runtime:** 13.x LTS
+* **Worker Autoscaling:** min 1 → max 4
+* **Instance type:** GCP compute-optimized equivalent
+* **Mode:**
 
-```
+  * *Single-Node* for prototyping
+  * *Autoscaling Standard Cluster* for streaming
+* **Libraries Installed:**
 
+  * `pyspark`
+  * `delta-spark`
+  * Kafka connector
+  * Snowflake connector
+
+### Workflows (planned)
+
+* dbt Cloud Transformation Job
+* Databricks Job Runner for dbt Core + Snowflake sync
+
+All Databricks -> Snowflake credentials use **secret scopes**, not plaintext.
+
+---
+
+## 5. Snowflake Modeling
+
+dbt drives the transformation layer.
+
+### Model Structure
+
+```text
 dbt/
 ├── models/
 │   ├── staging/
@@ -138,47 +150,70 @@ dbt/
 │   │   └── dim_school.sql
 │   └── snapshots/
 │       └── school_snapshot.sql
-
 ```
 
----
+Key patterns:
 
-# 6. Testing Strategy
-
-## dbt Tests
-- Schema tests (unique, not_null)  
-- Custom tests (e.g., valid borough names)  
-
-## Pytest (planned)
-- Schema validation for streaming micro-batches  
-- Batch ingestion integrity tests  
+* **Staging models:** Clean + standardize
+* **Marts:** Metric aggregation + joins
+* **Snapshots:** Historical comparison and SCD2
 
 ---
 
-# 7. Power BI Layer
+## 6. Testing Strategy
 
-The Power BI dashboard (planned):
+### dbt Tests (active)
 
-- Equity metrics  
-- School or district-level breakdowns  
-- Streaming vs batch comparisons  
-- Historical trends  
+* Schema: `unique`, `not_null`
+* Domain: `accepted_values`
+* Foreign keys: `relationships`
+
+### Pytest (coming)
+
+* Schema validation for micro-batches
+* Batch ingestion tests
+* End-to-end ingestion → transformation checks
+
+### Future Quality Enhancements
+
+* Great Expectations or Soda
+* Unit tests for Kafka → Bronze ingestion
 
 ---
 
-# 8. Future Enhancements
+## 7. Power BI Layer
 
-- Add Docker development environment  
-- Add Great Expectations / Soda for data quality  
-- Add end-to-end CI/CD (GitHub Actions)  
-- Add lineage with OpenLineage  
-- Add monitoring with Databricks metrics + Prometheus  
+The Power BI dashboard is now **fully functional**, showing:
+
+* Borough- and school-level equity metrics
+* SVI (vulnerability) indicators
+* Climate snapshot performance
+* District comparisons
+* Downloadable drillthroughs
+* Combined batch + streaming insights
+
+Screenshots available under `powerbi/exports/`.
 
 ---
 
-# 9. Author
+## 8. Future Enhancements
 
-**Dylan Picart**  
-Data Engineering · Cloud · Streaming · Analytics  
-Portfolio: https://www.dylanpicart.com  
-LinkedIn: https://linkedin.com/in/dylanpicart
+* Add Docker development environment
+* Add CI/CD (GitHub Actions) for:
+
+  * linting
+  * dbt tests
+  * documentation builds
+* Add Great Expectations or Soda for data quality
+* Add OpenLineage for table & job lineage
+* Add Prometheus/Grafana for streaming pipeline observability
+* Add Power BI dataset refresh automation
+
+---
+
+## 9. Author
+
+**Dylan Picart**
+Data Engineering · Cloud · Streaming · Analytics
+Portfolio: [https://www.dylanpicart.com](https://www.dylanpicart.com)
+LinkedIn: [https://linkedin.com/in/dylanpicart](https://linkedin.com/in/dylanpicart)

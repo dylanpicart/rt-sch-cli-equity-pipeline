@@ -1,54 +1,59 @@
-# Real-Time Batch & Streaming ELT Pipeline  
-### Kafka · Databricks · Snowflake · dbt · Power BI · GCP
+# Real-Time Batch & Streaming ELT Pipeline
 
-> *Project Status:* ~85% complete — Databricks cluster configuration and job orchestration currently being finalized.
+## Kafka · Databricks · Snowflake · dbt · Power BI · GCP
 
-This project is a **modern end-to-end data engineering ELT pipeline** that ingests both **streaming** and **batch** data to produce **clean, reliable, analytics-ready datasets** for equity insights. It demonstrates how to combine Kafka, Databricks, dbt, and Snowflake within a Medallion architecture (Bronze → Silver → Gold) following industry best practices.
+> **Project Status:** ~95% complete — dashboard live; Databricks Snowflake connector and job orchestration in final tuning.
+
+This project is a **modern end-to-end ELT pipeline** that ingests both **streaming** and **batch** data to produce **clean, reliable, analytics-ready datasets** for citywide equity insights.
+It demonstrates how Kafka, Databricks, dbt, and Snowflake come together in a **Medallion architecture (Bronze → Silver → Gold)** following industry best practices.
+
+Built as part of the **Data Engineering Modern Toolkit** initiative.
 
 ---
 
 ## Purpose
 
-Many organizations rely on fragmented spreadsheets and manual workflows to understand community or program data. This pipeline shows how to modernize that process with:
+Many organizations still depend on **manual spreadsheets and inconsistent data flows** to understand community or program outcomes.
+This pipeline shows how to modernize those workflows using:
 
-- **Streaming ingestion (Kafka)**
-- **Distributed compute (Databricks / Spark Structured Streaming)**
-- **Curated transformations (dbt + Snowflake)**
-- **Equity-focused analytics (Power BI)**
+* **Streaming ingestion via Kafka**
+* **Autoscaling distributed compute in Databricks**
+* **Curated transformations with dbt + Snowflake**
+* **Equity-focused analytics surfaced in Power BI**
 
-It is built as part of a broader **Data Engineering Modern Toolkit** initiative.
+The result is a **scalable, automated, reproducible** analytics stack.
 
 ---
 
-## Architecture at a Glance
+## Architecture Overview
 
 ```text
-Kafka (Streaming) ---> Bronze (Raw Landing) ---> Silver (Cleaned) ---> Gold (Curated Models in Snowflake)
+Kafka (Streaming) ---> Bronze (Raw Landing) ---> Silver (Cleaned) ---> Gold (Curated Snowflake Models)
 Batch Data ------^         |                         |                        |
-Databricks / Spark Structured Streaming + dbt Transforms
+Databricks (Spark Structured Streaming) + dbt (SQL models)
 ```
 
-### Key Concepts
+### Medallion Layers
 
-- **Bronze:** Raw JSON/CSV from Kafka + batch reference tables  
-- **Silver:** Cleaned, normalized, schema-enforced Delta/Parquet  
-- **Gold:** dbt-modeled dimensional tables for BI  
+* **Bronze:** Raw JSON/CSV from Kafka + supplemental batch reference data
+* **Silver:** Cleaned, normalized, schema-validated Delta/Parquet
+* **Gold:** dbt-modeled dimensional/tidy tables consumed directly by Power BI
 
-A more detailed diagram can be found in `/docs/project_overview.md`.
+A more detailed diagram is available in `/docs/project_overview.md`.
 
 ---
 
 ## Tech Stack
 
-**Languages:** Python, SQL  
-**Streaming:** Apache Kafka  
-**Compute:** Databricks (Spark Structured Streaming)  
-**Storage:** Google Cloud Storage (Bronze / Silver)  
-**Warehouse:** Snowflake  
-**Transformation:** dbt  
-**Orchestration (Planned):** Databricks Jobs  
-**Visualization:** Power BI  
-**DevOps:** Git, Makefile, environment-isolated configs  
+**Languages:** Python, SQL
+**Streaming:** Apache Kafka (Confluent)
+**Compute:** Databricks (Spark Structured Streaming)
+**Storage:** Google Cloud Storage (Bronze/Silver)
+**Warehouse:** Snowflake
+**Transformation:** dbt
+**Orchestration:** Databricks Workflows (in progress)
+**Visualization:** Power BI
+**DevOps:** GitHub, Makefile, isolated config environments
 
 ---
 
@@ -104,7 +109,8 @@ rt-sch-cli-equity-pipeline/
 ├── powerbi/
 │   ├── climate_vulnerability.pbix
 │   └── exports/
-│       └── dashboard_screenshots/
+│       ├── dashboard_screenshots/
+│       └── metrics/
 │
 ├── scripts/
 │
@@ -119,7 +125,7 @@ rt-sch-cli-equity-pipeline/
 
 ## Quick Start (Local Simulation)
 
-> **NOTE:** *This repository never includes real credentials or production configs.*
+> **Note:** This repo never includes real credentials or production configs.
 
 ### 1. Install dependencies
 
@@ -149,37 +155,43 @@ python src/streaming/streaming_job.py
 
 ---
 
-## Databricks Integration (In Progress)
+## Databricks Integration (Nearing Completion)
 
-Work remaining:
+You can now:
 
-* Cluster config (autoscaling, DBR runtime, network settings)
+* Connect securely to Snowflake using Databricks Secrets
+* Run batch SVI ingestion
+* Prototype Bronze/Silver transformations in notebooks
+
+Finishing touches:
+
+* Autoscaling cluster settings (DBR runtime + node sizing)
 * Kafka → Bronze streaming job
-* Bronze → Silver Delta conversion
-* Silver → Snowflake Gold sync
-* Job orchestration via Databricks Workflows
+* Bronze → Silver Delta pipeline
+* Silver → Gold Snowflake sync
+* Production workflows via **Databricks Jobs**
 
-Progress will be reflected in `/docs/project_overview.md`.
+Progress documented in `/docs/project_overview.md`.
 
 ---
 
 ## Testing (Coming Soon)
 
-Unit tests for:
+Planned test suite:
 
-* Schema validation
-* Streaming transformations
-* dbt test suite (unique, not-null, accepted values)
+* Schema validation tests
+* Mock streaming tests
+* dbt tests (unique, not-null, accepted values)
+* UDF validation where applicable
 
 ---
 
 ## Roadmap
 
-* [ ] Finalize Databricks cluster + job configuration
 * [ ] Add full architecture diagram
-* [ ] Add CI/CD workflow (lint + dbt tests)
-* [ ] Add example Power BI dashboard
-* [ ] Add Docker development environment
+* [ ] Add CI/CD workflow (linting + dbt tests)
+* [ ] Publish Power BI dashboard example
+* [ ] Docker development environment
 
 ---
 
@@ -192,5 +204,5 @@ MIT
 ## Contact
 
 **Author:** Dylan Picart
-**Portfolio:** https://www.dylanpicart.com
-**LinkedIn:** https://linkedin.com/in/dylanpicart
+**Portfolio:** [https://www.dylanpicart.com](https://www.dylanpicart.com)
+**LinkedIn:** [https://linkedin.com/in/dylanpicart](https://linkedin.com/in/dylanpicart)

@@ -126,7 +126,7 @@ load-svi-snowflake: upload-snowflake-jars
 
 load-svi-snowflake-alt:
 	@echo ">>> Loading SVI from GCS into Snowflake using local Python (alt loader)..."
-	$(PYTHON) scripts/alt_load_svi_to_snowflake.py
+	$(PYTHON) scripts/snowflake/alt_load_svi_to_snowflake.py
 
 dbt-debug:
 	cd dbt && $(DBT) debug
