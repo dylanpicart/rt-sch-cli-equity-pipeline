@@ -190,7 +190,7 @@ Planned test suite:
 
 * [ ] Add full architecture diagram
 * [ ] Add CI/CD workflow (linting + dbt tests)
-* [ ] Publish Power BI dashboard example
+* [ ] Integrate SVI into Power BI dashboard
 * [ ] Docker development environment
 
 ---
@@ -201,8 +201,8 @@ MIT
 
 ---
 
-## Contact
+## Author
 
-**Author:** Dylan Picart
+Developed by Dylan K. Picart at Partnership With Children
 **Portfolio:** [https://www.dylanpicart.com](https://www.dylanpicart.com)
 **LinkedIn:** [https://linkedin.com/in/dylanpicart](https://linkedin.com/in/dylanpicart)
