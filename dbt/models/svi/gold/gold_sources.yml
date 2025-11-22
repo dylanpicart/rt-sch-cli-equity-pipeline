@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: gold
+    database: SCHOOL_CLIMATE
+    schema: GOLD
+    tables:
+      - name: climate_clean
+        description: "Curated school climate table exported from Databricks Silver layer."

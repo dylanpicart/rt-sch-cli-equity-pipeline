@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: SCHOOL_CLIMATE
+    schema: BRONZE
+    tables:
+      - name: svi_ny_raw
+        description: "CDC Social Vulnerability Index (SVI) for New York State, tract-level, ingested via Dataproc Spark."
+
+models:
+  - name: bronze_svi
+    description: "Thin Bronze model exposing SVI fields used for downstream climate-vulnerability joins."
+    columns:
+      - name: tract_fips
+        description: "11-digit census tract FIPS code."
+        tests:
+          - not_null
+          - unique
+      - name: rpl_theme1
+        description: "SVI Theme 1: Socioeconomic."
+      - name: rpl_theme2
+        description: "SVI Theme 2: Household composition & disability."
+      - name: rpl_theme3
+        description: "SVI Theme 3: Minority status & language."
+      - name: rpl_theme4
+        description: "SVI Theme 4: Housing type & transportation."
+      - name: rpl_themes
+        description: "Overall vulnerability composite index."
