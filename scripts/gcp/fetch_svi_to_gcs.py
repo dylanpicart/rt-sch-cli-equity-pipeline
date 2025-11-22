@@ -9,7 +9,7 @@ Usage (from repo root):
 
   python scripts/fetch_svi_to_gcs.py \
     --url "<PASTE_SVI_CSV_URL_HERE>" \
-    --bucket rt-school-climate-delta \
+    --bucket DEFAULT_BUCKET \
     --object raw/svi/cdc_svi.csv
 
 You must have GOOGLE_APPLICATION_CREDENTIALS set to a service account
@@ -22,14 +22,24 @@ import os
 import sys
 import time
 from typing import Optional
+from dotenv import load_dotenv
 
 import requests
 from google.cloud import storage
 from requests import Response
 from requests.exceptions import HTTPError, Timeout, RequestException
 
+load_dotenv()
+
+DEFAULT_BUCKET = os.environ.get("GCP_BUCKET_NAME")
+
+if not DEFAULT_BUCKET:
+    raise ValueError(
+        "GCP_BUCKET_NAME is not set in the environment. "
+        "Please add GCP_BUCKET_NAME=<your-bucket-name> to your .env file."
+    )
+
 DEFAULT_LOCAL_PATH = "data/source_svi/raw/cdc_svi_ny_2022.csv"
-DEFAULT_BUCKET = "rt-school-climate-delta"
 DEFAULT_OBJECT = "raw/svi/cdc_svi.csv"
 
 # You will paste the actual CDC SVI CSV URL here or pass via --url

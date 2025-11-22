@@ -1,6 +1,6 @@
 gcloud config set project rt-school-climate
 
-PROJECT_ID="rt-school-climate"
+PROJECT_ID="gcp-project-id-here"
 
 # Create sf_user
 echo -n "ANON_USER" | gcloud secrets create sf_user \
@@ -45,8 +45,8 @@ echo -n "SOME_SF_SCHEMA" | gcloud secrets create sf_schema \
   --data-file=-
 
 # Grant access to service account
-PROJECT_ID="rt-school-climate"
-SA_EMAIL="databricks-email@rt-school-climate.iam.gserviceaccount.com"
+PROJECT_ID="gcp-project-id-here"
+SA_EMAIL="databricks-email@gcp-project-id-here.iam.gserviceaccount.com"
 
 for SECRET in sf_user sf_password sf_account sf_role sf_warehouse sf_database sf_schema; do
   gcloud secrets add-iam-policy-binding "$SECRET" \

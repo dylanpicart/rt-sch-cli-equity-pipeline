@@ -31,7 +31,7 @@ def get_args():
     parser.add_argument(
         "--bucket",
         required=True,
-        help="GCS bucket name (without gs://), e.g. rt-school-climate-delta",
+        help="GCS bucket name (without gs://), e.g. bucket-name",
     )
     return parser.parse_args()
 

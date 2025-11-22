@@ -8,7 +8,7 @@ and upload it to a Google Cloud Storage bucket.
 Usage (from repo root):
 
   python scripts/fetch_climate_to_gcs.py \
-    --bucket rt-school-climate-delta \
+    --bucket DEFAULT_BUCKET \
     --object raw/climate/nyc_school_climate_raw.json
 
 You must have GOOGLE_APPLICATION_CREDENTIALS set to a service account
@@ -21,14 +21,24 @@ import os
 import sys
 import time
 from typing import Optional
+from dotenv import load_dotenv
 
 import requests
 from google.cloud import storage
 from requests import Response
 from requests.exceptions import HTTPError, Timeout, RequestException
 
+load_dotenv()
+
+DEFAULT_BUCKET = os.environ.get("GCP_BUCKET_NAME")
+
+if not DEFAULT_BUCKET:
+    raise ValueError(
+        "GCP_BUCKET_NAME is not set in the environment. "
+        "Please add GCP_BUCKET_NAME=<your-bucket-name> to your .env file."
+    )
+
 DEFAULT_LOCAL_PATH = "data/source_climate/raw/nyc_school_climate_raw.json"
-DEFAULT_BUCKET = "rt-school-climate-delta"
 DEFAULT_OBJECT = "raw/climate/nyc_school_climate_raw.json"
 
 # NYC Open Data School Climate API (your link)

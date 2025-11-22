@@ -155,21 +155,23 @@ python src/streaming/streaming_job.py
 
 ---
 
-## Databricks Integration (Nearing Completion)
+## Databricks Integration (Real-Time Streaming)
 
-You can now:
+Databricks is used exclusively for the **real-time streaming** side of the pipeline.
+We use it to:
 
-* Connect securely to Snowflake using Databricks Secrets
-* Run batch SVI ingestion
-* Prototype Bronze/Silver transformations in notebooks
+* **Ingest Kafka events into Bronze Delta tables** on GCS using Spark Structured Streaming
+* **Transform Bronze → Silver** via Databricks notebooks and modular Python packages
+* **Synchronize Silver → Snowflake Gold** tables using the native Snowflake connector
+* **Manage secrets securely** using Databricks Secret Scopes (GCP Secret Manager–backed)
 
-Finishing touches:
+### Production-Ready Capabilities
 
-* Autoscaling cluster settings (DBR runtime + node sizing)
-* Kafka → Bronze streaming job
-* Bronze → Silver Delta pipeline
-* Silver → Gold Snowflake sync
-* Production workflows via **Databricks Jobs**
+* Autoscaling cluster configuration (DBR runtime, cluster policy, node sizing)
+* Real-time **Kafka -> Bronze streaming job**
+* **Bronze -> Silver** Delta Lake pipeline (schema cleaning, type normalization)
+* **Silver -> Snowflake Gold** sync powering Power BI
+* Notebook-driven and file-driven **Databricks Jobs** for orchestration
 
 Progress documented in `/docs/project_overview.md`.
 
@@ -197,12 +199,12 @@ Planned test suite:
 
 ## License
 
-MIT
+This project is licensed under the **MIT License**, which permits reuse, modification, distribution, and private or commercial use as long as the original license notice is included.
 
 ---
 
 ## Author
 
-Developed by Dylan K. Picart at Partnership With Children
+Developed by **Dylan Picart** at **Partnership With Children**.
 **Portfolio:** [https://www.dylanpicart.com](https://www.dylanpicart.com)
 **LinkedIn:** [https://linkedin.com/in/dylanpicart](https://linkedin.com/in/dylanpicart)

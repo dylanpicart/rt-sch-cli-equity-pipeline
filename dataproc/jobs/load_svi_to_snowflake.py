@@ -9,12 +9,13 @@ Batch job to:
 """
 
 import os
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lpad
 
-# Default GCS location for SVI CSV
-DEFAULT_GCS_SVI_PATH = "gs://rt-school-climate-delta/raw/svi/cdc_svi_ny_2022.csv"
+load_dotenv()
 
+DEFAULT_GCS_SVI_PATH = os.getenv("GCS_SVI_PATH", "gs://gcs-bucket-name/raw/svi/cdc_svi_ny_2022.csv")
 
 def get_snowflake_options(spark: SparkSession) -> tuple[dict, str, str]:
     """

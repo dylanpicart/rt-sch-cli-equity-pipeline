@@ -21,7 +21,7 @@ endif
 ifdef GCP_BUCKET_NAME
     BUCKET := $(GCP_BUCKET_NAME)
 else
-    BUCKET := rt-school-climate-delta
+    BUCKET := actual-hardcoded-bucket-name
 endif
 
 # Default object paths
@@ -33,9 +33,9 @@ SVI_CSV_URL    ?= https://svi.cdc.gov/Documents/Data/2022/csv/states/NewYork.csv
 CLIMATE_API_URL ?= https://data.cityofnewyork.us/api/views/fb6n-h22r/rows.json?accessType=DOWNLOAD
 
 # Dataproc & Snowflake job settings
-DP_CLUSTER_NAME ?= rt-school-climate-cluster
-DP_REGION       ?= us-east1
-DP_ZONE         ?= us-east1-b
+DP_CLUSTER_NAME ?= ${GCP_DATAPROC_CLUSTER_NAME}
+DP_REGION       ?= ${GCP_REGION}
+DP_ZONE         ?= ${GCP_ZONE}
 
 JARS_LOCAL_DIR  ?= jars
 JARS_GCS_URI    ?= gs://$(BUCKET)/jars
