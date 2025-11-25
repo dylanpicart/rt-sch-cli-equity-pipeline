@@ -18,8 +18,6 @@ sfOptions = {
     "sfRole": "DATA_ENGINEER_ROLE",
 }
 
-df_gold.write.format("snowflake") \
-    .options(**sfOptions) \
-    .option("dbtable", "SCHOOL_CLIMATE_GOLD") \
-    .mode("overwrite") \
-    .save()
+df_gold.write.format("snowflake").options(**sfOptions).option(
+    "dbtable", "SCHOOL_CLIMATE_GOLD"
+).mode("overwrite").save()

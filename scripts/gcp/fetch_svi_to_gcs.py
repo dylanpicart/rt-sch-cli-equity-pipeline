@@ -50,16 +50,12 @@ logger = logging.getLogger("fetch_svi_to_gcs")
 
 def setup_logging() -> None:
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
     )
 
 
 def http_get_with_retries(
-    url: str,
-    timeout: int = 30,
-    max_retries: int = 3,
-    backoff_factor: float = 2.0,
+    url: str, timeout: int = 30, max_retries: int = 3, backoff_factor: float = 2.0
 ) -> Response:
     """
     Perform a REST-style HTTP GET with basic retry + backoff.
@@ -141,9 +137,7 @@ def upload_file_to_gcs(local_path: str, bucket_name: str, blob_name: str) -> Non
     if not os.path.exists(local_path):
         raise FileNotFoundError(f"Local file does not exist: {local_path}")
 
-    logger.info(
-        "Uploading %s to gs://%s/%s", local_path, bucket_name, blob_name
-    )
+    logger.info("Uploading %s to gs://%s/%s", local_path, bucket_name, blob_name)
 
     client = storage.Client()
     bucket = client.bucket(bucket_name)
@@ -189,9 +183,7 @@ def main(argv=None) -> int:
     args = parse_args(argv)
 
     if not args.url:
-        logger.error(
-            "No SVI CSV URL provided. Use --url or set SVI_CSV_URL env var."
-        )
+        logger.error("No SVI CSV URL provided. Use --url or set SVI_CSV_URL env var.")
         return 1
 
     logger.info("Starting SVI download + upload pipeline...")

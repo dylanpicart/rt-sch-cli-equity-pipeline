@@ -61,10 +61,7 @@ def main():
     bronze_path = f"gs://{args.bucket}/bronze/school_climate"
     silver_path = f"gs://{args.bucket}/silver/school_climate"
 
-    spark = (
-        SparkSession.builder.appName("school-climate-kafka-stream")
-        .getOrCreate()
-    )
+    spark = SparkSession.builder.appName("school-climate-kafka-stream").getOrCreate()
 
     spark.sparkContext.setLogLevel("WARN")
 
@@ -82,11 +79,7 @@ def main():
         ),
     }
 
-    df_kafka = (
-        spark.readStream.format("kafka")
-        .options(**kafka_options)
-        .load()
-    )
+    df_kafka = spark.readStream.format("kafka").options(**kafka_options).load()
 
     # value is binary -> cast to string, keep Kafka timestamp as metadata
     df_raw = df_kafka.select(
@@ -95,9 +88,8 @@ def main():
     )
 
     # ---- 2. Bronze: write raw JSON to GCS ----
-    bronze_query = (
-        df_raw.writeStream.outputMode("append")
-        .format("parquet")
+    _bronze_query = (
+        df_raw.writeStream.format("parquet")
         .option("path", bronze_path)
         .option("checkpointLocation", bronze_path + "/_checkpoint")
         .start()
@@ -106,29 +98,19 @@ def main():
     # ---- 3. Silver: parse JSON into typed columns and clean ----
     school_climate_schema = build_school_climate_schema()
 
-    df_parsed = (
-        df_raw.withColumn(
-            "json", F.from_json("value", school_climate_schema)
-        )
-        .select(
-            "json.*",
-            "kafka_timestamp",
-        )
-    )
+    df_parsed = df_raw.withColumn(
+        "json", F.from_json("value", school_climate_schema)
+    ).select("json.*", "kafka_timestamp")
 
     df_silver = (
-        df_parsed
-        .withColumn(
-            "parent_response_rate",
-            F.col("total_parent_response_rate").cast("double"),
+        df_parsed.withColumn(
+            "parent_response_rate", F.col("total_parent_response_rate").cast("double")
         )
         .withColumn(
-            "teacher_response_rate",
-            F.col("total_teacher_response_rate").cast("double"),
+            "teacher_response_rate", F.col("total_teacher_response_rate").cast("double")
         )
         .withColumn(
-            "student_response_rate",
-            F.col("total_student_response_rate").cast("double"),
+            "student_response_rate", F.col("total_student_response_rate").cast("double")
         )
         .drop(
             "total_parent_response_rate",
@@ -137,9 +119,8 @@ def main():
         )
     )
 
-    silver_query = (
-        df_silver.writeStream.outputMode("append")
-        .format("parquet")
+    _silver_query = (
+        df_silver.writeStream.format("parquet")
         .option("path", silver_path)
         .option("checkpointLocation", silver_path + "/_checkpoint")
         .start()

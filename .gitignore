@@ -2,7 +2,7 @@
 .env
 *.env
 .env.*
-!*.env.example
+*.env.example
 
 # Virtual environments
 .venv/
@@ -109,11 +109,29 @@ logs/
 jars/*.jar
 
 # Prevent accidental staging of any secrets directory anywhere
-**/secret*/ 
+**/secret*/
 **/*credential*
 **/*password*
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tf
+*.tfvars
+!terraform.tfvars.exampl
 
 # misc
 contracts/*.yml
 what_I_did.txt
 scripts/gcp/gcp_cli/dataproc_exec.sh
+
+# Pytest cache
+.pytest_cache/
+
+# Ruff cache (rare, but safe)
+.ruff_cache/
+
+# Ignore Jupyter/Databricks notebook junk
+.ipynb_checkpoints/

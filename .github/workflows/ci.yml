@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project & dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Install your package in editable mode if applicable
+          if [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
+            pip install -e .
+          fi
+          pip install pre-commit pytest
+          pip install dbt-core dbt-snowflake dbt-databricks
+
+      - name: Run pre-commit (lint, format, secrets)
+        run: |
+          pre-commit run --all-files --show-diff-on-failure
+
+      - name: Run tests (pytest)
+        run: |
+          pytest -q
+
+      - name: Prepare dummy dbt profile for compile
+        env:
+          DBT_PROFILES_DIR: ./.github/ci_profiles
+        run: |
+          mkdir -p "$DBT_PROFILES_DIR"
+          cat <<EOF > "$DBT_PROFILES_DIR/profiles.yml"
+          school_climate_profile:
+            target: ci
+            outputs:
+              ci:
+                type: snowflake
+                account: "DUMMY"
+                user: "DUMMY"
+                password: "DUMMY"
+                role: "DUMMY"
+                database: "DUMMY"
+                warehouse: "DUMMY"
+                schema: "DUMMY"
+          EOF
+
+      - name: dbt deps + compile (no warehouse hit)
+        env:
+          DBT_PROFILES_DIR: ./.github/ci_profiles
+        run: |
+          dbt deps --project-dir dbt
+          dbt compile --project-dir dbt
+
+      - name: Terraform fmt + validate
+        uses: hashicorp/setup-terraform@v3
+      - name: Terraform fmt & validate
+        run: |
+          terraform -chdir=infra/terraform fmt -check
+          terraform -chdir=infra/terraform init -backend=false
+          terraform -chdir=infra/terraform validate

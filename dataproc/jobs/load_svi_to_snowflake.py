@@ -15,7 +15,10 @@ from pyspark.sql.functions import col, lpad
 
 load_dotenv()
 
-DEFAULT_GCS_SVI_PATH = os.getenv("GCS_SVI_PATH", "gs://gcs-bucket-name/raw/svi/cdc_svi_ny_2022.csv")
+DEFAULT_GCS_SVI_PATH = os.getenv(
+    "GCS_SVI_PATH", "gs://gcs-bucket-name/raw/svi/cdc_svi_ny_2022.csv"
+)
+
 
 def get_snowflake_options(spark: SparkSession) -> tuple[dict, str, str]:
     """
@@ -67,20 +70,15 @@ def get_snowflake_options(spark: SparkSession) -> tuple[dict, str, str]:
 
 
 def main():
-    spark = (
-        SparkSession.builder
-        .appName("LoadSVINYToSnowflake")
-        .getOrCreate()
-    )
+    spark = SparkSession.builder.appName("LoadSVINYToSnowflake").getOrCreate()
 
     sf_options, gcs_svi_path, target_table = get_snowflake_options(spark)
 
     print(f"Reading SVI CSV from: {gcs_svi_path}")
     svi_raw = (
-        spark.read
-             .option("header", "true")
-             .option("inferSchema", "true")
-             .csv(gcs_svi_path)
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(gcs_svi_path)
     )
 
     print("Raw columns:", svi_raw.columns)
@@ -88,10 +86,8 @@ def main():
     if "FIPS" not in svi_raw.columns:
         raise RuntimeError("Expected column 'FIPS' not found in SVI CSV schema.")
 
-    svi_clean = (
-        svi_raw
-        .withColumnRenamed("FIPS", "tract_fips")
-        .withColumn("tract_fips", lpad(col("tract_fips").cast("string"), 11, "0"))
+    svi_clean = svi_raw.withColumnRenamed("FIPS", "tract_fips").withColumn(
+        "tract_fips", lpad(col("tract_fips").cast("string"), 11, "0")
     )
 
     select_cols = ["tract_fips"]
@@ -105,19 +101,19 @@ def main():
     for row in svi_final.limit(5).collect():
         print(row)
 
-    print(f"Writing to Snowflake: {sf_options['sfDatabase']}.{sf_options['sfSchema']}.{target_table}")
+    print(
+        f"Writing to Snowflake: {sf_options['sfDatabase']}.{sf_options['sfSchema']}.{target_table}"
+    )
     (
-        svi_final.write
-                .format("snowflake")
-                .options(**sf_options)
-                .option("dbtable", target_table)
-                .mode("overwrite")
-                .save()
+        svi_final.write.format("snowflake")
+        .options(**sf_options)
+        .option("dbtable", target_table)
+        .mode("overwrite")
+        .save()
     )
 
     print("Snowflake write complete.")
     spark.stop()
-
 
 
 if __name__ == "__main__":

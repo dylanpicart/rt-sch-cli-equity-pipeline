@@ -1,0 +1,152 @@
+name: CD (On-Demand Deploy)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Target environment"
+        required: true
+        type: choice
+        default: "dev"
+        options:
+          - dev
+          - prod
+      run_dbt_snowflake:
+        description: "Run dbt on Snowflake?"
+        required: true
+        type: choice
+        default: "false"
+        options: ["true", "false"]
+      run_dbt_databricks:
+        description: "Run dbt on Databricks?"
+        required: true
+        type: choice
+        default: "false"
+        options: ["true", "false"]
+      run_terraform_apply:
+        description: "Run terraform apply? (CAREFUL!)"
+        required: true
+        type: choice
+        default: "false"
+        options: ["true", "false"]
+
+jobs:
+  dbt-deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.run_dbt_snowflake == 'true' || github.event.inputs.run_dbt_databricks == 'true' }}
+
+    env:
+      TARGET_ENV: ${{ github.event.inputs.target_env }}
+      DBT_PROFILES_DIR: ./.github/dbt_profiles
+
+      # Snowflake from GitHub Secrets
+      SNOWFLAKE_ACCOUNT:   ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER:      ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD:  ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE:      ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DATABASE:  ${{ secrets.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_SCHEMA_DBT: ${{ secrets.SNOWFLAKE_SCHEMA_DBT }}
+
+      # Databricks from GitHub Secrets
+      DATABRICKS_HOST:      ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+      DATABRICKS_TOKEN:     ${{ secrets.DATABRICKS_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt adapters
+        run: |
+          python -m pip install --upgrade pip
+          pip install dbt-core dbt-snowflake dbt-databricks
+
+      - name: Create dbt profiles from secrets
+        run: |
+          mkdir -p "$DBT_PROFILES_DIR"
+          cat <<EOF > "$DBT_PROFILES_DIR/profiles.yml"
+          school_climate_profile:
+            target: snowflake_${TARGET_ENV}
+            outputs:
+              snowflake_${TARGET_ENV}:
+                type: snowflake
+                account: "${SNOWFLAKE_ACCOUNT}"
+                user: "${SNOWFLAKE_USER}"
+                password: "${SNOWFLAKE_PASSWORD}"
+                role: "${SNOWFLAKE_ROLE}"
+                warehouse: "${SNOWFLAKE_WAREHOUSE}"
+                database: "${SNOWFLAKE_DATABASE}"
+                schema: "${SNOWFLAKE_SCHEMA_DBT}"
+              databricks_${TARGET_ENV}:
+                type: databricks
+                host: "${DATABRICKS_HOST}"
+                http_path: "${DATABRICKS_HTTP_PATH}"
+                token: "${DATABRICKS_TOKEN}"
+                catalog: "main"
+                schema: "${SNOWFLAKE_SCHEMA_DBT}"
+          EOF
+
+      - name: dbt deps
+        env:
+          DBT_PROFILES_DIR: ./.github/dbt_profiles
+        run: |
+          dbt deps --project-dir dbt
+
+      - name: dbt run + test on Snowflake
+        if: ${{ github.event.inputs.run_dbt_snowflake == 'true' }}
+        env:
+          DBT_PROFILES_DIR: ./.github/dbt_profiles
+        run: |
+          dbt run  --project-dir dbt --profile school_climate_profile --target snowflake_${TARGET_ENV}
+          dbt test --project-dir dbt --profile school_climate_profile --target snowflake_${TARGET_ENV}
+
+      - name: dbt run + test on Databricks (tag:databricks)
+        if: ${{ github.event.inputs.run_dbt_databricks == 'true' }}
+        env:
+          DBT_PROFILES_DIR: ./.github/dbt_profiles
+        run: |
+          dbt run  --project-dir dbt --profile school_climate_profile --target databricks_${TARGET_ENV} --select tag:databricks
+          dbt test --project-dir dbt --profile school_climate_profile --target databricks_${TARGET_ENV} --select tag:databricks
+
+  terraform-apply:
+    runs-on: ubuntu-latest
+    needs: dbt-deploy
+    if: ${{ github.event.inputs.run_terraform_apply == 'true' }}
+
+    env:
+      TARGET_ENV: ${{ github.event.inputs.target_env }}
+
+      # Terraform vars from GitHub Secrets (no tfvars in git)
+      TF_VAR_environment:        ${{ github.event.inputs.target_env }}
+      TF_VAR_gcp_project_id:     ${{ secrets.GCP_PROJECT_ID }}
+      TF_VAR_gcp_region:         ${{ secrets.GCP_REGION }}
+      TF_VAR_gcs_bucket_prefix:  ${{ secrets.GCS_BUCKET_PREFIX }}
+      TF_VAR_gcs_location:       ${{ secrets.GCS_LOCATION }}
+      TF_VAR_snowflake_account:  ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      TF_VAR_snowflake_user:     ${{ secrets.SNOWFLAKE_USER }}
+      TF_VAR_snowflake_password: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      TF_VAR_snowflake_role:     ${{ secrets.SNOWFLAKE_ROLE }}
+      TF_VAR_snowflake_warehouse: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      TF_VAR_snowflake_database:  ${{ secrets.SNOWFLAKE_DATABASE }}
+      TF_VAR_databricks_host:    ${{ secrets.DATABRICKS_HOST }}
+      TF_VAR_databricks_token:   ${{ secrets.DATABRICKS_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init, plan, apply
+        run: |
+          terraform -chdir=infra/terraform fmt -check
+          terraform -chdir=infra/terraform init
+          terraform -chdir=infra/terraform plan
+          terraform -chdir=infra/terraform apply -auto-approve

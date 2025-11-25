@@ -38,26 +38,36 @@ NYC_SCHOOL_CLIMATE_API = os.getenv(
 )
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="[%(asctime)s] [%(levelname)s] %(message)s",
+    level=logging.INFO, format="[%(asctime)s] [%(levelname)s] %(message)s"
 )
 
 # -------------------------------------------------------------------
 # Minimal Data Contract (optional but recommended)
 # -------------------------------------------------------------------
 
-REQUIRED_FIELDS = ["dbn", "school_name", "total_parent_response_rate", "total_teacher_response_rate", "total_student_response_rate"]
+REQUIRED_FIELDS = [
+    "dbn",
+    "school_name",
+    "total_parent_response_rate",
+    "total_teacher_response_rate",
+    "total_student_response_rate",
+]
+
 
 def is_valid_event(row: dict) -> bool:
     """For now, log missing fields but don't block production."""
-    missing = [f for f in REQUIRED_FIELDS if f not in row or row[f] in (None, "", "NULL")]
+    missing = [
+        f for f in REQUIRED_FIELDS if f not in row or row[f] in (None, "", "NULL")
+    ]
     if missing:
         logging.debug("Row missing expected fields %s; still producing.", missing)
     return True
 
+
 # -------------------------------------------------------------------
 # Helper Functions
 # -------------------------------------------------------------------
+
 
 def load_config(path: Path) -> dict:
     if not path.exists():
@@ -102,10 +112,10 @@ def fetch_school_climate_data() -> list[dict]:
         return []
 
 
-
 # -------------------------------------------------------------------
 # Main Loop
 # -------------------------------------------------------------------
+
 
 def main(poll_interval_sec: int = 15) -> None:
 
@@ -135,16 +145,15 @@ def main(poll_interval_sec: int = 15) -> None:
                 skipped_count += 1
                 continue
 
-            producer.produce(
-                TOPIC_NAME,
-                value=json.dumps(row).encode("utf-8"),
-            )
+            producer.produce(TOPIC_NAME, value=json.dumps(row).encode("utf-8"))
             valid_count += 1
 
         producer.flush()
         logging.info(
             "Produced %d messages, skipped %d invalid. Sleeping %s sec...",
-            valid_count, skipped_count, poll_interval_sec
+            valid_count,
+            skipped_count,
+            poll_interval_sec,
         )
 
         time.sleep(poll_interval_sec)

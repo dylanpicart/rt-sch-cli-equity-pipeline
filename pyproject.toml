@@ -1,13 +1,15 @@
 [project]
 name = "rt-sch-cli-equity-pipeline"
-version = "0.1.0"
-description = "Real-Time School Climate & Equity Pipeline using Kafka, Databricks, dbt, Snowflake, and Power BI"
+version = "0.1.1"
+description = "Hybrid batch-and-streaming ELT pipeline for NYC school climate and equity analytics using Kafka, Dataproc, Databricks, Snowflake, dbt, and Power BI."
 authors = [
     { name="Dylan Picart", email="dylanpicart@mail.adelphi.edu" }
 ]
 requires-python = ">=3.10"
 
-# Core universal dependencies
+# -----------------------------------------------------------------------------
+# Core dependencies used across multiple layers of the project
+# -----------------------------------------------------------------------------
 dependencies = [
     "jinja2>=3.1.4",
     "python-dotenv>=1.0.1",
@@ -18,35 +20,69 @@ dependencies = [
     "google-auth>=2.30.0"
 ]
 
+# -----------------------------------------------------------------------------
+# Optional functional dependency groups
+# These allow users to install only what they need (e.g.: pip install .[kafka])
+# -----------------------------------------------------------------------------
 [project.optional-dependencies]
 
-# Kafka streaming components
+# Streaming ingestion (Kafka → Databricks Bronze)
 kafka = [
     "confluent-kafka>=2.4.0",
 ]
 
-# Databricks / Spark components
+# Databricks / Spark transformations (Bronze → Silver)
 databricks = [
     "pyspark>=3.5.0",
 ]
 
-# Snowflake ingestion + modeling
+# Snowflake ingestion + Gold modeling (Silver → Gold)
 snowflake = [
     "snowflake-connector-python>=3.7.0",
     "snowflake-sqlalchemy>=1.5.0",
 ]
 
-# Developer tools
+# Dataproc batch jobs (SVI batch processing)
+dataproc = [
+    "google-cloud-dataproc>=5.7.0",
+]
+
+# Dashboard + data prep (future: for exporting images, generating docs)
+dashboard = [
+    "matplotlib>=3.8.0",
+    "plotly>=5.22.0",
+]
+
+# Developer tooling
 dev = [
     "black>=24.3.0",
     "ruff>=0.5.0",
+    "pytest>=8.2.0",
 ]
 
+# -----------------------------------------------------------------------------
+# Package settings
+# -----------------------------------------------------------------------------
 [tool.setuptools]
-# Disable automatic package discovery – we’re using this project
-# primarily as a “mono-repo” with scripts and configs.
+# Disable automatic discovery – this repo acts as a mono-repo with scripts, jobs, etc.
 packages = []
 
+# -----------------------------------------------------------------------------
+# Build system
+# -----------------------------------------------------------------------------
 [build-system]
 requires = ["setuptools>=65", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+
+extend-exclude = '''
+(
+  rt_databricks/
+  |\.venv/
+  |venv/
+  |env/
+  |ENV/
+)
+'''

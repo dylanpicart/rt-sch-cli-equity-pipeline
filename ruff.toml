@@ -1,0 +1,14 @@
+line-length = 88
+target-version = "py311"
+
+exclude = [
+    ".venv",
+    "venv",
+    "env",
+    "ENV",
+    ".git",
+    "__pycache__",
+    "dbt/target",
+    ".dbt",
+    "rt_databricks/",
+]

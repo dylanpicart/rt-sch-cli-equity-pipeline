@@ -52,16 +52,12 @@ logger = logging.getLogger("fetch_climate_to_gcs")
 
 def setup_logging() -> None:
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
     )
 
 
 def http_get_with_retries(
-    url: str,
-    timeout: int = 60,
-    max_retries: int = 3,
-    backoff_factor: float = 2.0,
+    url: str, timeout: int = 60, max_retries: int = 3, backoff_factor: float = 2.0
 ) -> Response:
     """
     REST-style HTTP GET with basic retry/backoff.
@@ -117,7 +113,6 @@ def download_climate_json(url: str, dest_path: str) -> str:
                 f.write(chunk)
 
     return dest_path
-
 
 
 def upload_file_to_gcs(local_path: str, bucket_name: str, blob_name: str) -> None:

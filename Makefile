@@ -1,79 +1,101 @@
-# rt-sch-cli-equity-pipeline/Makefile
+# =========================================================
+# rt-sch-cli-equity-pipeline / Makefile
+# =========================================================
 
 PYTHON ?= python
 
 # dbt command with project-local profiles directory
 DBT := DBT_PROFILES_DIR=$(PWD)/.dbt dbt
 
-# ---------------------------------------------------------
+# =========================================================
 # Load local environment variables from .env (if present)
-# ---------------------------------------------------------
+# =========================================================
 ifneq (,$(wildcard .env))
     include .env
-    # Export all non-comment variable names from .env
     export $(shell sed -n 's/^\([^#][^=]*\)=.*/\1/p' .env)
 endif
 
-# ---------------------------------------------------------
-# GCS bucket for this project
-# Prefer GCP_BUCKET_NAME from .env, fallback to explicit name
-# ---------------------------------------------------------
+# =========================================================
+# GCS bucket configuration
+# =========================================================
 ifdef GCP_BUCKET_NAME
     BUCKET := $(GCP_BUCKET_NAME)
 else
     BUCKET := actual-hardcoded-bucket-name
 endif
 
-# Default object paths
-SVI_OBJECT      ?= raw/svi/cdc_svi_ny_2022.csv
-CLIMATE_OBJECT  ?= raw/climate/nyc_school_climate_raw.json
+SVI_OBJECT       ?= raw/svi/cdc_svi_ny_2022.csv
+CLIMATE_OBJECT   ?= raw/climate/nyc_school_climate_raw.json
+SVI_CSV_URL      ?= https://svi.cdc.gov/Documents/Data/2022/csv/states/NewYork.csv
+CLIMATE_API_URL  ?= https://data.cityofnewyork.us/api/views/fb6n-h22r/rows.json?accessType=DOWNLOAD
 
-# Data source URLs (override in env if they ever change)
-SVI_CSV_URL    ?= https://svi.cdc.gov/Documents/Data/2022/csv/states/NewYork.csv
-CLIMATE_API_URL ?= https://data.cityofnewyork.us/api/views/fb6n-h22r/rows.json?accessType=DOWNLOAD
-
-# Dataproc & Snowflake job settings
+# Dataproc cluster config
 DP_CLUSTER_NAME ?= ${GCP_DATAPROC_CLUSTER_NAME}
 DP_REGION       ?= ${GCP_REGION}
 DP_ZONE         ?= ${GCP_ZONE}
 
+# JARS
 JARS_LOCAL_DIR  ?= jars
 JARS_GCS_URI    ?= gs://$(BUCKET)/jars
-
 SPARK_SF_JAR    ?= spark-snowflake_2.12-2.16.0-spark_3.3.jar
 SF_JDBC_JAR     ?= snowflake-jdbc-3.19.0.jar
-
 SF_PROPS_FILE   ?= .secrets/spark_snowflake.properties
 
-# ---------------------------------------------------------
+# =========================================================
+# Terraform configuration
+# =========================================================
+TERRAFORM_DIR := infra/terraform
 
-.PHONY: help fetch-svi fetch-climate fetch-data data-dirs \
-        dataproc-create-cluster dataproc-delete-cluster \
-        upload-snowflake-jars load-svi-snowflake \
-        load-svi-snowflake-alt \
-        dbt-debug dbt-run dbt-test
+infra-init:
+	@echo ">>> Initializing Terraform..."
+	cd $(TERRAFORM_DIR) && terraform init
 
-help:
-	@echo "Available targets:"
-	@echo "  make data-dirs               - Create local data/ folder structure"
-	@echo "  make fetch-svi               - Download CDC SVI NY 2022 CSV and upload to GCS"
-	@echo "  make fetch-climate           - Download NYC School Climate JSON and upload to GCS"
-	@echo "  make fetch-data              - Run both fetch-svi and fetch-climate"
-	@echo "  make dataproc-create-cluster - Create single-node Dataproc cluster"
-	@echo "  make dataproc-delete-cluster - Delete Dataproc cluster"
-	@echo "  make upload-snowflake-jars   - Upload Snowflake connector JARs to GCS"
-	@echo "  make load-svi-snowflake      - Run Dataproc Spark job to load SVI into Snowflake"
-	@echo "  make load-svi-snowflake-alt  - Load SVI into Snowflake via local Python fallback"
-	@echo "  make dbt-debug               - Run 'dbt debug' with project-local profiles"
-	@echo "  make dbt-run                 - Run 'dbt run' with project-local profiles"
-	@echo "  make dbt-test                - Run 'dbt test' with project-local profiles"
+infra-plan:
+	@echo ">>> Terraform plan..."
+	cd $(TERRAFORM_DIR) && terraform plan -var-file="terraform.tfvars"
+
+infra-up:
+	@echo ">>> Applying Terraform (creating infra)..."
+	cd $(TERRAFORM_DIR) && terraform apply -var-file="terraform.tfvars" -auto-approve
+
+infra-down:
+	@echo ">>> Destroying Terraform-managed infra..."
+	cd $(TERRAFORM_DIR) && terraform destroy -var-file="terraform.tfvars" -auto-approve
+
+infra-fmt:
+	@echo ">>> Formatting Terraform..."
+	cd $(TERRAFORM_DIR) && terraform fmt
+
+# =========================================================
+# Python Quality: Linting + Formatting + Testing
+# =========================================================
+lint:
+	@echo ">>> Running Ruff..."
+	ruff check . --exclude='.venv' --exclude='dbt/target' --exclude='.dbt'
+	@echo ">>> Running Flake8..."
+	flake8 . --exclude=.venv,dbt/target,.dbt
+	@echo ">>> Running Black (--check)..."
+	black . --check --exclude '(\.venv|dbt/target|\.dbt)'
+
+format:
+	@echo ">>> Running Black (formatting)..."
+	black . --exclude '(\.venv|dbt/target|\.dbt)'
+
+test:
+	@echo ">>> Running unit + integration tests..."
+	pytest -q
+
+# =========================================================
+# Data Acquisition
+# =========================================================
+.PHONY: data-dirs fetch-svi fetch-climate fetch-data
 
 data-dirs:
 	mkdir -p data/source_svi/raw
 	mkdir -p data/source_svi/docs
 	mkdir -p data/source_svi/samples
 	mkdir -p data/source_climate/raw
-	mkdir -p data/source_climate/docs
+	mkdir-p data/source_climate/docs
 	mkdir -p data/source_climate/samples
 	mkdir -p data/processed
 
@@ -93,6 +115,12 @@ fetch-climate:
 
 fetch-data: fetch-svi fetch-climate
 	@echo ">>> All data sources fetched and uploaded."
+
+# =========================================================
+# Dataproc Jobs
+# =========================================================
+.PHONY: dataproc-create-cluster dataproc-delete-cluster \
+        upload-snowflake-jars load-svi-snowflake load-svi-snowflake-alt
 
 dataproc-create-cluster:
 	@echo ">>> Creating Dataproc cluster $(DP_CLUSTER_NAME) in $(DP_REGION)..."
@@ -125,8 +153,13 @@ load-svi-snowflake: upload-snowflake-jars
 	  --properties-file=$(SF_PROPS_FILE)
 
 load-svi-snowflake-alt:
-	@echo ">>> Loading SVI from GCS into Snowflake using local Python (alt loader)..."
+	@echo ">>> Loading SVI from GCS into Snowflake (local fallback)..."
 	$(PYTHON) scripts/snowflake/alt_load_svi_to_snowflake.py
+
+# =========================================================
+# dbt Commands
+# =========================================================
+.PHONY: dbt-debug dbt-run dbt-test
 
 dbt-debug:
 	cd dbt && $(DBT) debug
@@ -136,3 +169,19 @@ dbt-run:
 
 dbt-test:
 	cd dbt && $(DBT) test
+
+# =========================================================
+# Help
+# =========================================================
+help:
+	@echo "Available targets:"
+	@echo "  make lint                   - Lint Python (ruff, flake8, black)"
+	@echo "  make format                 - Format Python using Black"
+	@echo "  make test                   - Run unit & integration tests"
+	@echo "  make infra-init             - Terraform init"
+	@echo "  make infra-plan             - Terraform plan (show changes)"
+	@echo "  make infra-up               - Apply Terraform (build infra)"
+	@echo "  make infra-down             - Destroy Terraform-managed infra"
+	@echo "  make fetch-data             - Run both fetch-svi and fetch-climate"
+	@echo "  make dataproc-create-cluster / dataproc-delete-cluster"
+	@echo "  make dbt-run / dbt-test     - Run dbt with local profiles"

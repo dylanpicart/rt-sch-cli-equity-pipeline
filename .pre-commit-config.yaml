@@ -1,0 +1,48 @@
+# .pre-commit-config.yaml
+
+repos:
+  # Basic hygiene hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # Secret scanning (detect-secrets)
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+
+  # Black for formatting - ONLY run on real project code, not rt_databricks or venvs
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        files: >
+          ^(scripts/|dataproc/|kafka/|snowflake/|tests/|dbt/|infra/|Makefile|pyproject\.toml)
+        exclude: >
+          (^rt_databricks/|\.venv/|venv/|env/|ENV/|dbt/target|\.dbt)
+
+  # Ruff for fast linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.1
+    hooks:
+      - id: ruff
+        files: >
+          ^(scripts/|dataproc/|kafka/|snowflake/|tests/|dbt/|infra/)
+        exclude: >
+          (^rt_databricks/|\.venv/|venv/|env/|ENV/|dbt/target|\.dbt)
+
+  # Flake8 (extra style checks)
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        files: >
+          ^(scripts/|dataproc/|kafka/|snowflake/|tests/|dbt/|infra/)
+        exclude: >
+          (^rt_databricks/|\.venv/|venv/|env/|ENV/|dbt/target|\.dbt)

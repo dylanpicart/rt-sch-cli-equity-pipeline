@@ -10,15 +10,15 @@ The Snowflake layer acts as the authoritative source of truth for clean, validat
 
 The Snowflake/dbt layer serves three core functions:
 
-1. **Transform raw and cleaned data into dimensional models**  
-   - Fact tables for event-level and time-series metrics  
-   - Dimension tables for schools, districts, demographics, or reference entities  
+1. **Transform raw and cleaned data into dimensional models**
+   - Fact tables for event-level and time-series metrics
+   - Dimension tables for schools, districts, demographics, or reference entities
 
-2. **Apply data quality checks and constraints**  
-   - dbt tests guarantee schema consistency, uniqueness, referential integrity, and value ranges  
+2. **Apply data quality checks and constraints**
+   - dbt tests guarantee schema consistency, uniqueness, referential integrity, and value ranges
 
-3. **Provide a stable and documented interface**  
-   - Downstream BI tools and analysts consume vetted models instead of raw or semi-structured data  
+3. **Provide a stable and documented interface**
+   - Downstream BI tools and analysts consume vetted models instead of raw or semi-structured data
 
 ---
 
@@ -51,43 +51,43 @@ dbt/
 
 ### Staging Layer (`models/staging/`)
 
-The staging layer standardizes and lightly transforms inputs from Bronze and Silver tables.  
+The staging layer standardizes and lightly transforms inputs from Bronze and Silver tables.
 Key responsibilities:
 
-- Column renaming  
-- Data type enforcement  
-- Removing nested structures or arrays  
-- Basic normalization such as trimming or lowercasing  
+- Column renaming
+- Data type enforcement
+- Removing nested structures or arrays
+- Basic normalization such as trimming or lowercasing
 
 These models are designed to be thin and purely structural.
 
 ### Marts Layer (`models/marts/`)
 
-The marts layer contains the business-ready tables used by dashboards and applications.  
+The marts layer contains the business-ready tables used by dashboards and applications.
 Examples:
 
-- `fact_equity_metrics` combines processed streaming data with reference attributes  
-- `dim_school` creates a master lookup table used across all analytics  
-- `dim_date` standardizes date-based metrics, joins, and aggregations  
+- `fact_equity_metrics` combines processed streaming data with reference attributes
+- `dim_school` creates a master lookup table used across all analytics
+- `dim_date` standardizes date-based metrics, joins, and aggregations
 
 This layer follows a dimensional modeling approach (fact and dimension tables).
 
 ### Snapshots (`snapshots/`)
 
-Snapshots track changes to slowly changing dimensions (SCD2).  
+Snapshots track changes to slowly changing dimensions (SCD2).
 Typical uses:
 
-- Tracking school attribute changes over time  
-- Preserving historical versions for auditing or backfill operations  
+- Tracking school attribute changes over time
+- Preserving historical versions for auditing or backfill operations
 
 ### Seeds (`seeds/`)
 
-Seeds store static reference data, version-controlled and deployed directly into Snowflake.  
+Seeds store static reference data, version-controlled and deployed directly into Snowflake.
 Examples:
 
-- Borough mappings  
-- Classification codes  
-- Benchmark thresholds  
+- Borough mappings
+- Classification codes
+- Benchmark thresholds
 
 ---
 
@@ -97,16 +97,16 @@ The project uses both built-in and custom dbt tests.
 
 Built-in tests:
 
-- `unique`  
-- `not_null`  
-- `accepted_values`  
-- `relationships`  
+- `unique`
+- `not_null`
+- `accepted_values`
+- `relationships`
 
 Custom tests (optional):
 
-- Ensuring only valid borough names are used  
-- Ensuring metrics fall within defined numeric ranges  
-- Enforcing referential integrity between facts and dimensions  
+- Ensuring only valid borough names are used
+- Ensuring metrics fall within defined numeric ranges
+- Enforcing referential integrity between facts and dimensions
 
 Running tests:
 

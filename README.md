@@ -1,11 +1,13 @@
-# Real-Time Batch & Streaming ELT Pipeline
+# **Real-Time Batch & Streaming ELT Pipeline**
 
-## Kafka · Databricks · Snowflake · dbt · Power BI · GCP
+## **Kafka · Databricks · Snowflake · dbt · Power BI · GCP · Terraform · CI/CD**
 
-> **Project Status:** ~95% complete — dashboard live; Databricks Snowflake connector and job orchestration in final tuning.
+> **Project Status:** Production-ready.
+> Full CI/CD + IaC + DevSecOps pipeline implemented.
+> Dashboard live; Databricks Snowflake connector and job orchestration finalized.
 
-This project is a **modern end-to-end ELT pipeline** that ingests both **streaming** and **batch** data to produce **clean, reliable, analytics-ready datasets** for citywide equity insights.
-It demonstrates how Kafka, Databricks, dbt, and Snowflake come together in a **Medallion architecture (Bronze → Silver → Gold)** following industry best practices.
+This project is a **modern, end-to-end ELT platform** combining streaming, batch, distributed compute, cloud warehousing, and automated transformations.
+It demonstrates how **Kafka, Databricks, dbt, and Snowflake** integrate in a **Medallion Architecture (Bronze → Silver → Gold)** to support **equity-focused analytics** across NYC school climate datasets.
 
 Built as part of the **Data Engineering Modern Toolkit** initiative.
 
@@ -13,86 +15,91 @@ Built as part of the **Data Engineering Modern Toolkit** initiative.
 
 ## Purpose
 
-Many organizations still depend on **manual spreadsheets and inconsistent data flows** to understand community or program outcomes.
-This pipeline shows how to modernize those workflows using:
+Many organizations still rely on siloed spreadsheets and manual workflows.
+This project demonstrates how to modernize those workflows using:
 
-* **Streaming ingestion via Kafka**
-* **Autoscaling distributed compute in Databricks**
-* **Curated transformations with dbt + Snowflake**
-* **Equity-focused analytics surfaced in Power BI**
+* **Streaming ingestion** (Kafka → GCS Bronze)
+* **Distributed compute** (Databricks Spark)
+* **Automated SQL transformations** (dbt)
+* **Cloud warehousing** (Snowflake)
+* **Cross-platform orchestration** (Databricks Jobs + GitHub Actions)
+* **Enterprise-ready monitoring & visualization** (Power BI)
 
-The result is a **scalable, automated, reproducible** analytics stack.
+The result is a **scalable, reproducible, and secure** ELT pipeline suitable for real-world data engineering environments.
 
 ---
 
 ## Architecture Overview
 
 ```text
-Kafka (Streaming) ---> Bronze (Raw Landing) ---> Silver (Cleaned) ---> Gold (Curated Snowflake Models)
-Batch Data ------^         |                         |                        |
-Databricks (Spark Structured Streaming) + dbt (SQL models)
+                ┌───────────────────────────┐
+                │          Kafka            │
+                │   (Real-time Streaming)   │
+                └──────────────┬────────────┘
+                               ▼
+                        Bronze (Raw)
+                      GCS Landing Zone
+                               ▼
+        ┌───────────────────────────────┐
+        │  Databricks (Spark Structured │
+        │       Streaming + Batch)      │
+        └───────────────────────────────┘
+                               ▼
+                        Silver (Cleaned)
+                     Delta / Parquet / GCS
+                               ▼
+                 dbt → Snowflake (Gold Models)
+                               ▼
+                   Power BI (Equity Dashboard)
 ```
 
 ### Medallion Layers
 
-* **Bronze:** Raw JSON/CSV from Kafka + supplemental batch reference data
-* **Silver:** Cleaned, normalized, schema-validated Delta/Parquet
-* **Gold:** dbt-modeled dimensional/tidy tables consumed directly by Power BI
+* **Bronze** – Unprocessed, schema-flexible raw data
+* **Silver** – Cleaned, normalized, typed Delta/Parquet
+* **Gold** – dbt-modeled analytical tables powering dashboards
 
-A more detailed diagram is available in `/docs/project_overview.md`.
+A detailed architecture diagram is found in `/diagrams/`.
 
 ---
 
-## Tech Stack
+## Technologies
 
-**Languages:** Python, SQL
-**Streaming:** Apache Kafka (Confluent)
-**Compute:** Databricks (Spark Structured Streaming)
-**Storage:** Google Cloud Storage (Bronze/Silver)
-**Warehouse:** Snowflake
-**Transformation:** dbt
-**Orchestration:** Databricks Workflows (in progress)
-**Visualization:** Power BI
-**DevOps:** GitHub, Makefile, isolated config environments
+**Languages** – Python, SQL
+**Streaming** – Kafka (Confluent)
+**Compute** – Databricks (Spark Structured Streaming)
+**Storage** – GCS (Bronze/Silver)
+**Warehouse** – Snowflake
+**Transformations** – dbt
+**Orchestration** – Databricks Jobs
+**Visualization** – Power BI
+**DevOps** – Terraform, GitHub Actions, Makefile, pre-commit, detect-secrets
 
 ---
 
 ## Repository Structure
 
 ```text
-rt-sch-cli-equity-pipeline/
+root/
 │
 ├── README.md
+├── SECURITY.md
 ├── .gitignore
 │
-├── jinja_templates/
-│   ├── metric_query.sql.j2
-│   ├── table_schema.sql.j2
-│   ├── dbt_env_template.yml.j2
-│   └── generate_sql.py
-│
-├── diagrams/
-│   ├── architecture.png
-│   └── medallion.png
-│
-├── data/
-│   ├── svi_raw.csv
-│   └── sample_climate_records.json
-│
-├── kafka/
-│   ├── kafka_producer.py
-│   ├── requirements.txt
-│   └── config/
-│       └── producer_config.json
-│
-├── databricks/
-│   ├── streaming_notebook.py
-│   ├── batch_svi_load.py
-│   └── utils/
-│       └── schema.py
+├── infra/
+│   └── terraform/
+│       ├── providers.tf
+│       ├── variables.tf
+│       ├── gcs.tf
+│       ├── snowflake.tf
+│       ├── databricks.tf
+│       ├── dataproc.tf
+│       ├── gcp_snowflake_integration.tf
+│       ├── main.tf
+│       ├── terraform.tfvars.example
+│       └── terraform.dev.tfvars (ignored)
 │
 ├── dbt/
-│   ├── dbt_project.yml
 │   ├── models/
 │   │   ├── bronze/
 │   │   ├── silver/
@@ -101,33 +108,32 @@ rt-sch-cli-equity-pipeline/
 │   ├── tests/
 │   └── seeds/
 │
-├── snowflake/
-│   ├── create_tables.sql
-│   ├── sample_queries.sql
-│   └── sf_connector_example.py
+├── databricks/
+│   ├── bronze_to_silver_notebook.py
+│   ├── streaming/
+│   └── utils/
 │
-├── powerbi/
-│   ├── climate_vulnerability.pbix
-│   └── exports/
-│       ├── dashboard_screenshots/
-│       └── metrics/
+├── kafka/
+│   ├── kafka_producer.py
+│   └── config/
 │
 ├── scripts/
+│   ├── gcp/
+│   ├── snowflake/
+│   └── utilities/
 │
+├── powerbi/
+├── diagrams/
 └── screenshots/
-    ├── kafka_topic.png
-    ├── databricks_stream.png
-    ├── snowflake_table.png
-    └── dbt_lineage_graph.png
 ```
 
 ---
 
 ## Quick Start (Local Simulation)
 
-> **Note:** This repo never includes real credentials or production configs.
+> **No real credentials are committed. .env and *.tfvars are gitignored.**
 
-### 1. Install dependencies
+### 1. Create virtual environment
 
 ```bash
 python -m venv .venv
@@ -135,76 +141,172 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Copy example secrets
+### 2. Copy example variables
 
 ```bash
+cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.dev.tfvars
 cp config/secrets.example.yml config/secrets.local.yml
 ```
 
-### 3. Run local batch ingestion
+### 3. Run batch ingestion (local)
 
 ```bash
-python src/batch_ingestion/ingest_batch_reference.py
+python scripts/gcp/fetch_svi_to_gcs.py
 ```
 
-### 4. Run a mock streaming job
+### 4. Run mock streaming ingestion (local)
 
 ```bash
-python src/streaming/streaming_job.py
+python scripts/streaming/mock_stream.py
 ```
 
 ---
 
-## Databricks Integration (Real-Time Streaming)
+## Databricks Integration
 
-Databricks is used exclusively for the **real-time streaming** side of the pipeline.
-We use it to:
+Databricks powers the **real-time streaming** and large-scale batch side:
 
-* **Ingest Kafka events into Bronze Delta tables** on GCS using Spark Structured Streaming
-* **Transform Bronze → Silver** via Databricks notebooks and modular Python packages
-* **Synchronize Silver → Snowflake Gold** tables using the native Snowflake connector
-* **Manage secrets securely** using Databricks Secret Scopes (GCP Secret Manager–backed)
-
-### Production-Ready Capabilities
-
-* Autoscaling cluster configuration (DBR runtime, cluster policy, node sizing)
-* Real-time **Kafka -> Bronze streaming job**
-* **Bronze -> Silver** Delta Lake pipeline (schema cleaning, type normalization)
-* **Silver -> Snowflake Gold** sync powering Power BI
-* Notebook-driven and file-driven **Databricks Jobs** for orchestration
-
-Progress documented in `/docs/project_overview.md`.
+* Kafka → Bronze streaming pipelines via Spark Structured Streaming
+* Bronze → Silver cleaning using notebook-driven transformations
+* Silver → Snowflake Gold sync via Snowflake connector
+* Databricks Secret Scopes for secure GCP + Snowflake integration
+* Configurable job cluster defined via **Terraform**
+* Orchestration via Databricks Jobs (auto-paused)
 
 ---
 
-## Testing (Coming Soon)
+## Terraform Infrastructure-as-Code (IaC)
 
-Planned test suite:
+Terraform (in `infra/terraform/`) provisions the entire data platform:
 
-* Schema validation tests
-* Mock streaming tests
-* dbt tests (unique, not-null, accepted values)
-* UDF validation where applicable
+### **GCP**
+
+* GCS Bronze/Silver/Gold buckets
+* Snowflake GCS service account
+* IAM bindings for integration
+* Optional Dataproc cluster (feature-flagged)
+
+### **Snowflake**
+
+* Warehouse: `PIPELINE_WH`
+* Database: `SCHOOL_CLIMATE`
+* Schemas: `BRONZE`, `SILVER`, `GOLD`, `DBT_DYLAN`
+* Roles: `PIPELINE_ROLE`, `BI_ROLE`
+* Grants: USAGE / ALL PRIVILEGES / SELECT via classic provider
+* Storage Integration + External Stage for Bronze
+
+### **Databricks**
+
+* Job definition for Bronze → Silver transformations
+* Job cluster (Spark runtime, node specs)
+
+### **Environment separation**
+
+* `terraform.dev.tfvars` (ignored)
+* `terraform.tfvars.example`
+* Flags:
+
+  * `enable_databricks_job`
+  * `enable_dataproc_cluster`
+
+### Local workflow
+
+```bash
+cd infra/terraform
+set -a && source ../../.env && set +a
+terraform fmt
+terraform init -backend=false
+terraform validate
+terraform plan -var-file="terraform.dev.tfvars"
+```
+
+---
+
+## CI (Continuous Integration)
+
+Located at `.github/workflows/ci.yml`.
+
+Runs on **every push + PR**:
+
+### **Pre-commit hooks**
+
+* whitespace cleanup
+* EOF fixes
+* YAML validation
+* **detect-secrets** scan
+* `black` formatting
+* `ruff` & `flake8` linting
+
+#### **Tests**
+
+* `pytest` (unit + integration)
+
+#### **dbt validation**
+
+* `dbt deps`
+* `dbt compile` (using a dummy CI profile—no Snowflake calls made)
+
+#### **Terraform validation**
+
+* `terraform fmt -check`
+* `terraform init -backend=false`
+* `terraform validate`
+
+All CI checks run **without secrets**.
+
+---
+
+## CD (Continuous Delivery — Manual Only)
+
+Located at `.github/workflows/cd.yml`.
+
+A **manual `workflow_dispatch`** that supports:
+
+* Running dbt against **Snowflake**
+* Running dbt against **Databricks**
+* Optional `terraform apply`
+* Per-environment (`dev` or `prod`)
+* Credentials loaded from **GitHub Secrets** (never in Git)
+
+This ensures deployments are **explicit, safe, and auditable**.
+
+---
+
+## Security (DevSecOps)
+
+See `SECURITY.md` for full policy.
+
+Key features:
+
+* No credentials committed — `.env`, `*.tfvars`, and service accounts are gitignored
+* `detect-secrets` guards the repo from accidental exposure
+* Terraform providers pinned to prevent supply-chain drift
+* CI/CD workflows segregated (CI = validate only, CD = manual apply)
+* Principle-of-least-privilege Snowflake & GCP roles
 
 ---
 
 ## Roadmap
 
-* [ ] Add full architecture diagram
-* [ ] Add CI/CD workflow (linting + dbt tests)
-* [ ] Integrate SVI into Power BI dashboard
-* [ ] Docker development environment
+* [ ] Add detailed table-level lineage diagram (Bronze → Silver → Gold, SVI + Climate models)
+* [ ] Add automated integration test suite (end-to-end tests hitting dev Snowflake / GCS)
+* [ ] Add Databricks Jobs API orchestration (trigger + monitor jobs via REST/SDK)
+* [ ] Add Docker local environment for reproducible dev + CI
+* [ ] Add Power BI refresh automation (triggered after successful ELT runs)
+* [ ] Integrate SVI dashboard and merge SVI data with School Climate data for cross-referenced equity analysis
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License**, which permits reuse, modification, distribution, and private or commercial use as long as the original license notice is included.
+MIT License — free for personal and commercial use.
 
 ---
 
 ## Author
 
-Developed by **Dylan Picart** at **Partnership With Children**.
-**Portfolio:** [https://www.dylanpicart.com](https://www.dylanpicart.com)
-**LinkedIn:** [https://linkedin.com/in/dylanpicart](https://linkedin.com/in/dylanpicart)
+**Dylan Picart**
+Data Engineer & Analytics Engineer
+
+* 🌐 Portfolio: [https://www.dylanpicart.com](https://www.dylanpicart.com)
+* 💼 LinkedIn: [https://linkedin.com/in/dylanpicart](https://linkedin.com/in/dylanpicart)

@@ -24,10 +24,7 @@ def main():
         description="Render Jinja2 templates for SQL/dbt profiles."
     )
     parser.add_argument(
-        "--config",
-        type=str,
-        default=str(CONFIG_FILE),
-        help="YAML config file path.",
+        "--config", type=str, default=str(CONFIG_FILE), help="YAML config file path."
     )
     args = parser.parse_args()
 

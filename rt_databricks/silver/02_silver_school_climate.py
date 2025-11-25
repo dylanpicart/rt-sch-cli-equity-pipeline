@@ -25,33 +25,35 @@ from rt_databricks.utils.snowflake_options import get_sf_options
 #  Schema helpers
 # ---------------------------------------------------------------------------
 
+
 def get_bronze_value_schema() -> T.StructType:
     """
     JSON schema based on actual sample payload from Bronze.
     """
-    return T.StructType([
-        T.StructField(":sid", T.StringType(), True),
-        T.StructField(":id", T.StringType(), True),
-        T.StructField(":position", T.IntegerType(), True),
-        T.StructField(":created_at", T.LongType(), True),
-        T.StructField(":created_meta", T.StringType(), True),
-        T.StructField(":updated_at", T.LongType(), True),
-        T.StructField(":updated_meta", T.StringType(), True),
-        T.StructField(":meta", T.StringType(), True),
-
-        # Meaningful fields
-        T.StructField("dbn", T.StringType(), True),
-        T.StructField("school_name", T.StringType(), True),
-
-        T.StructField("total_parent_response_rate", T.StringType(), True),
-        T.StructField("total_teacher_response_rate", T.StringType(), True),
-        T.StructField("total_student_response_rate", T.StringType(), True),
-    ])
+    return T.StructType(
+        [
+            T.StructField(":sid", T.StringType(), True),
+            T.StructField(":id", T.StringType(), True),
+            T.StructField(":position", T.IntegerType(), True),
+            T.StructField(":created_at", T.LongType(), True),
+            T.StructField(":created_meta", T.StringType(), True),
+            T.StructField(":updated_at", T.LongType(), True),
+            T.StructField(":updated_meta", T.StringType(), True),
+            T.StructField(":meta", T.StringType(), True),
+            # Meaningful fields
+            T.StructField("dbn", T.StringType(), True),
+            T.StructField("school_name", T.StringType(), True),
+            T.StructField("total_parent_response_rate", T.StringType(), True),
+            T.StructField("total_teacher_response_rate", T.StringType(), True),
+            T.StructField("total_student_response_rate", T.StringType(), True),
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
 #  Bronze → Silver transforms
 # ---------------------------------------------------------------------------
+
 
 def read_bronze(
     spark: SparkSession,
@@ -68,24 +70,26 @@ def transform_bronze_to_silver(bronze_df: DataFrame) -> DataFrame:
     schema = get_bronze_value_schema()
 
     parsed_df = bronze_df.withColumn(
-        "payload",
-        F.from_json(F.col("value").cast("string"), schema)
+        "payload", F.from_json(F.col("value").cast("string"), schema)
     )
 
     df = parsed_df.select(
         # Identity fields
         F.col("payload.dbn").alias("dbn"),
         F.col("payload.school_name").alias("school_name"),
-
         # Response rates
-        F.col("payload.total_parent_response_rate").cast("double").alias("parent_response_rate"),
-        F.col("payload.total_teacher_response_rate").cast("double").alias("teacher_response_rate"),
-        F.col("payload.total_student_response_rate").cast("double").alias("student_response_rate"),
-
+        F.col("payload.total_parent_response_rate")
+        .cast("double")
+        .alias("parent_response_rate"),
+        F.col("payload.total_teacher_response_rate")
+        .cast("double")
+        .alias("teacher_response_rate"),
+        F.col("payload.total_student_response_rate")
+        .cast("double")
+        .alias("student_response_rate"),
         # Metadata timestamps
         F.to_timestamp(F.from_unixtime("payload.:created_at")).alias("created_at"),
         F.to_timestamp(F.from_unixtime("payload.:updated_at")).alias("updated_at"),
-
         # Kafka metadata
         F.col("topic").alias("kafka_topic"),
         F.col("partition").alias("kafka_partition"),
@@ -94,7 +98,7 @@ def transform_bronze_to_silver(bronze_df: DataFrame) -> DataFrame:
         F.col("ingest_ts"),
     )
 
-        # Add district_number and borough derived from DBN
+    # Add district_number and borough derived from DBN
     df = df.withColumn(
         "district_number",
         F.col("dbn").substr(1, 2).cast("int"),
@@ -103,11 +107,11 @@ def transform_bronze_to_silver(bronze_df: DataFrame) -> DataFrame:
     df = df.withColumn(
         "borough",
         F.when(F.col("dbn").substr(3, 1) == F.lit("M"), F.lit("Manhattan"))
-         .when(F.col("dbn").substr(3, 1) == F.lit("X"), F.lit("Bronx"))
-         .when(F.col("dbn").substr(3, 1) == F.lit("K"), F.lit("Brooklyn"))
-         .when(F.col("dbn").substr(3, 1) == F.lit("Q"), F.lit("Queens"))
-         .when(F.col("dbn").substr(3, 1) == F.lit("R"), F.lit("Staten Island"))
-         .otherwise(F.lit(None).cast("string"))
+        .when(F.col("dbn").substr(3, 1) == F.lit("X"), F.lit("Bronx"))
+        .when(F.col("dbn").substr(3, 1) == F.lit("K"), F.lit("Brooklyn"))
+        .when(F.col("dbn").substr(3, 1) == F.lit("Q"), F.lit("Queens"))
+        .when(F.col("dbn").substr(3, 1) == F.lit("R"), F.lit("Staten Island"))
+        .otherwise(F.lit(None).cast("string")),
     )
 
     # Add load timestamp
@@ -126,8 +130,7 @@ def write_silver_delta(
 
     path = silver_path(silver_dataset)
     (
-        silver_df.write
-        .format("delta")
+        silver_df.write.format("delta")
         .mode(mode)
         .option("overwriteSchema", "true")
         .save(path)
@@ -138,6 +141,7 @@ def write_silver_delta(
 # ---------------------------------------------------------------------------
 #  Snowflake loader
 # ---------------------------------------------------------------------------
+
 
 def write_silver_to_snowflake(
     silver_df: DataFrame,
@@ -151,8 +155,7 @@ def write_silver_to_snowflake(
     sf_options = get_sf_options(database=database, schema=schema)
 
     (
-        silver_df.write
-        .format("snowflake")
+        silver_df.write.format("snowflake")
         .options(**sf_options)
         .option("dbtable", table_name)
         .mode(mode)
@@ -163,6 +166,7 @@ def write_silver_to_snowflake(
 # ---------------------------------------------------------------------------
 #  Orchestrator
 # ---------------------------------------------------------------------------
+
 
 def run_silver_pipeline(
     spark: SparkSession,
