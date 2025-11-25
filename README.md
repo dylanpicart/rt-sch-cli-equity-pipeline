@@ -1,6 +1,10 @@
 # **Real-Time Batch & Streaming ELT Pipeline**
 
-[![CI](https://github.com/dylanpicart/rt-sch-cli-equity-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/dylanpicart/rt-sch-cli-equity-pipeline/actions/workflows/ci.yml)
+[![CI Status](https://github.com/dylanpicart/rt-sch-cli-equity-pipeline/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dylanpicart/rt-sch-cli-equity-pipeline/actions/workflows/ci.yml)
+![Python 3.11](https://img.shields.io/badge/python-3.11-blue)
+![dbt](https://img.shields.io/badge/dbt-Core%201.1x-blue)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-purple)
+![MIT License](https://img.shields.io/badge/license-MIT-green)
 
 ## **Kafka · Databricks · Snowflake · dbt · Power BI · GCP · Terraform · CI/CD**
 
