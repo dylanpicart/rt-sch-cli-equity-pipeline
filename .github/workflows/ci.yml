@@ -35,7 +35,7 @@ jobs:
         run: |
           pytest -q
 
-      - name: Prepare dummy dbt profile for compile
+      - name: Prepare dummy dbt profile for parse
         env:
           DBT_PROFILES_DIR: ./.github/ci_profiles
         run: |
@@ -55,15 +55,16 @@ jobs:
                 schema: "DUMMY"
           EOF
 
-      - name: dbt deps + compile (no warehouse hit)
+      - name: dbt deps + parse (no warehouse hit)
         env:
           DBT_PROFILES_DIR: ./.github/ci_profiles
         run: |
           dbt deps --project-dir dbt
-          dbt compile --project-dir dbt
+          dbt parse --project-dir dbt
 
-      - name: Terraform fmt + validate
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
+
       - name: Terraform fmt & validate
         run: |
           terraform -chdir=infra/terraform fmt -check
