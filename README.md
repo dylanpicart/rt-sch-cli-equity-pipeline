@@ -1,5 +1,7 @@
 # **Real-Time Batch & Streaming ELT Pipeline**
 
+[![CI](https://github.com/dylanpicart/rt-sch-cli-equity-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/dylanpicart/rt-sch-cli-equity-pipeline/actions/workflows/ci.yml)
+
 ## **Kafka · Databricks · Snowflake · dbt · Power BI · GCP · Terraform · CI/CD**
 
 > **Project Status:** Production-ready.
