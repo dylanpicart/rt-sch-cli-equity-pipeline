@@ -90,14 +90,14 @@ flowchart TB
         SNAP[SCHOOL_CLIMATE_SNAPSHOT]
     end
 
-    Snowflake_Gold --> INGEST[rag_service.ingest\n(embedding + upsert)]
-    INGEST --> VDB[Chroma Vector DB\n(data/chroma_index)]
+    Snowflake_Gold --> INGEST[rag_service.ingest<br/>(embedding + upsert)]
+    INGEST --> VDB[Chroma Vector DB<br/>(data/chroma_index)]
 
-    VDB --> RETRIEVER[LangChain Retriever\n+ Prompt Library (prompts.py)]
+    VDB --> RETRIEVER[LangChain Retriever<br/>+ Prompt Library (prompts.py)]
     SNAP --> RETRIEVER
 
-    RETRIEVER --> API[FastAPI RAG API\n(api.py, langchain_chain.py)]
-    API --> UI[React/TypeScript UI\n(rag-ui)]
+    RETRIEVER --> API[FastAPI RAG API<br/>(api.py, langchain_chain.py)]
+    API --> UI[React/TypeScript UI<br/>(rag-ui)]
 
     subgraph Modes
         O[district_risk_overview]

@@ -135,34 +135,35 @@ The result is a **scalable, reproducible, and secure** ELT pipeline suitable for
 ```mermaid
 flowchart TB
     subgraph Sources
-        K[Kafka\n(Real-time Streaming)]
-        R[REST API\n(Batch Ingestion)]
+        K[Kafka<br/>(Real-time Streaming)]
+        R[REST API<br/>(Batch Ingestion)]
     end
 
-    K --> B[Bronze (Raw)\nGCS Landing Zone]
+    K --> B[Bronze (Raw)<br/>GCS Landing Zone]
     R --> B
 
     subgraph Compute
-        D[Databricks\nSpark Structured Streaming\n+ Batch ETL]
-        P[Dataproc\nBatch SVI Ingestion\n+ PySpark Transforms]
+        D[Databricks<br/>Spark Structured Streaming<br/>+ Batch ETL]
+        P[Dataproc<br/>Batch SVI Ingestion<br/>+ PySpark Transforms]
     end
 
     B --> D
     B --> P
-    D --> S[Silver (Cleaned)\nDelta/Parquet on GCS]
+    D --> S[Silver (Cleaned)<br/>Delta/Parquet on GCS]
     P --> S
 
-    S --> G[dbt → Snowflake (Gold)\nSemantic Models + Metrics]
+    S --> G[dbt -> Snowflake (Gold)<br/>Semantic Models + Metrics]
 
     subgraph Consumers
-        PB[Power BI Dashboard\nEquity KPIs]
-        RAG[FastAPI RAG Service\n(LLM Semantic Q&A)]
-        OC[Other Consumers / APIs\nDownstream Pipelines]
+        PB[Power BI Dashboard<br/>Equity KPIs]
+        RAG[FastAPI RAG Service<br/>(LLM Semantic Q&A)]
+        OC[Other Consumers / APIs<br/>Downstream Pipelines]
     end
 
     G --> PB
     G --> RAG
-    G --> OC```
+    G --> OC
+```
 
 ---
 
@@ -698,6 +699,7 @@ See the [LICENSE](LICENSE) file for full details.
 ## Author
 
 Developed by **Dylan Picart** at Partnership With Children
+
 **Data Engineer · Analytics Engineer · AI/ML Practitioner**
 
 * 🌐 Portfolio: [https://www.dylanpicart.com](https://www.dylanpicart.com)
