@@ -1,21 +1,82 @@
 # **Real-Time Batch & Streaming ELT Pipeline**
 
+<!-- Row 1 -->
 [![CI Status](https://github.com/dylanpicart/rt-sch-cli-equity-pipeline/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dylanpicart/rt-sch-cli-equity-pipeline/actions/workflows/ci.yml)
-![Python 3.11](https://img.shields.io/badge/python-3.11-blue)
-![dbt](https://img.shields.io/badge/dbt-Core%201.1x-blue)
+![Python 3.11](https://img.shields.io/badge/Python-3.11-blue)
+![dbt Core](https://img.shields.io/badge/dbt-Core%201.1x-orange)
 ![Terraform](https://img.shields.io/badge/Terraform-IaC-purple)
-![MIT License](https://img.shields.io/badge/license-MIT-green)
+![MIT License](https://img.shields.io/badge/License-MIT-green)
 
-## **Kafka · Databricks · Snowflake · dbt · Power BI · GCP · Terraform · CI/CD**
+<!-- Row 2 -->
+![FastAPI](https://img.shields.io/badge/FastAPI-API%20Service-009688?logo=fastapi&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-RAG%20Orchestration-1C3C3C)
+![Chroma](https://img.shields.io/badge/Chroma-Vector%20DB-orange)
+![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=black)
+![Snowflake](https://img.shields.io/badge/Snowflake-Data%20Warehouse-29B5E8?logo=snowflake&logoColor=white)
+![Databricks](https://img.shields.io/badge/Databricks-Spark%20Workspace-EF3E34?logo=databricks&logoColor=white)
+![GCP](https://img.shields.io/badge/GCP-Cloud%20Platform-4285F4?logo=google-cloud&logoColor=white)
+
+## **Kafka · Databricks · Snowflake · dbt · FastAPI · LangChain · Chroma · React/TypeScript · Power BI · GCP · Terraform · CI/CD**
 
 > **Project Status:** Production-ready.
-> Full CI/CD + IaC + DevSecOps pipeline implemented.
-> Dashboard live; Databricks Snowflake connector and job orchestration finalized.
 
-This project is a **modern, end-to-end ELT platform** combining streaming, batch, distributed compute, cloud warehousing, and automated transformations.
-It demonstrates how **Kafka, Databricks, dbt, and Snowflake** integrate in a **Medallion Architecture (Bronze → Silver → Gold)** to support **equity-focused analytics** across NYC school climate datasets.
+* Full CI/CD + IaC + DevSecOps pipeline implemented
+* Dashboard live; Databricks–Snowflake connector and job orchestration finalized
+* dbt semantic layer (SVI definitions, climate questions, metric dictionary, vulnerability tables)
+* AI analytics layer with multi-mode RAG service (district risk overview, metric explanation, survey question analysis, district comparison)
+* FastAPI microservices + status/health endpoints
+* Chroma vector database with 5K+ embedded documents
+* React/TypeScript UI for natural-language district equity insights
 
-Built as part of the **Data Engineering Modern Toolkit** initiative.
+---
+
+## **Table of Contents**
+
+* [Project Overview](#project-overview)
+* [Purpose](#purpose)
+* [Architecture Overview](#architecture-overview)
+* [Quick Start (Local Simulation)](#quick-start-local-simulation)
+  * [1. Create virtual environment](#1-create-virtual-environment)
+  * [2. Copy example variables](#2-copy-example-variables)
+  * [3. Run batch ingestion (local)](#3-run-batch-ingestion-local)
+  * [4. Run mock streaming ingestion (local)](#4-run-mock-streaming-ingestion-local)
+* [Databricks Integration](#databricks-integration)
+* [Terraform Infrastructure-as-Code (IaC)](#terraform-infrastructure-as-code-iac)
+  * [**GCP**](#gcp)
+  * [**Snowflake**](#snowflake)
+  * [**Databricks**](#databricks)
+  * [**Environment separation**](#environment-separation)
+  * [Local workflow](#local-workflow)
+* [RAG Service – Semantic Q\&A for SVI + School Climate](#rag-service--semantic-qa-for-svi--school-climate)
+  * [Data sources used by the RAG layer](#data-sources-used-by-the-rag-layer)
+  * [dbt seeds (semantic layer)](#dbt-seeds-semantic-layer)
+  * [RAG service architecture](#rag-service-architecture)
+  * [Dev vs Prod modes](#dev-vs-prod-modes)
+  * [Running the RAG backend](#running-the-rag-backend)
+  * [Frontend (rag-ui)](#frontend-rag-ui)
+* [What RAG Adds](#what-rag-adds)
+* [Why This Matters](#why-this-matters)
+* [CI (Continuous Integration)](#ci-continuous-integration)
+  * [**Pre-commit hooks**](#pre-commit-hooks)
+    * [**Tests**](#tests)
+    * [**dbt validation**](#dbt-validation)
+    * [**Terraform validation**](#terraform-validation)
+* [CD (Continuous Delivery — Manual Only)](#cd-continuous-delivery--manual-only)
+* [Security (DevSecOps)](#security-devsecops)
+* [Roadmap](#roadmap)
+* [License](#license)
+* [Author](#author)
+
+---
+
+## Project Overview
+
+This project is a **modern, end-to-end data platform** that unifies streaming, batch, semantic modeling, and AI-assisted analytics.
+It demonstrates how **Kafka, Databricks, dbt, and Snowflake** integrate in a **Medallion Architecture (Bronze → Silver → Gold)** to power **equity-focused insights** across NYC School Climate and Social Vulnerability Index (SVI) data.
+
+On top of the ELT pipeline, the project adds a lightweight **Retrieval-Augmented Generation (RAG) service** using **FastAPI, LangChain, Chroma, and React/TypeScript**. This semantic layer enables district leaders to ask natural-language questions—*“What are the top risk indicators for District 29?”*—and receive grounded, contextual answers backed by dbt-validated Gold tables.
+
+Built as part of the **Data Engineering Modern Toolkit** initiative, the system showcases real-world engineering practices across cloud infrastructure, CI/CD, DevSecOps, semantic modeling, and AI-driven data experiences.
 
 ---
 
@@ -38,26 +99,72 @@ The result is a **scalable, reproducible, and secure** ELT pipeline suitable for
 ## Architecture Overview
 
 ```text
-                ┌───────────────────────────┐
-                │          Kafka            │
-                │   (Real-time Streaming)   │
-                └──────────────┬────────────┘
-                               ▼
-                        Bronze (Raw)
-                      GCS Landing Zone
-                               ▼
-        ┌───────────────────────────────┐
-        │  Databricks (Spark Structured │
-        │       Streaming + Batch)      │
-        └───────────────────────────────┘
-                               ▼
-                        Silver (Cleaned)
-                     Delta / Parquet / GCS
-                               ▼
-                 dbt → Snowflake (Gold Models)
-                               ▼
-                   Power BI (Equity Dashboard)
+         ┌──────────────────────────┐     ┌──────────────────────────┐
+         │          Kafka           │     │        REST API          │
+         │   (Real-time Streaming)  │     │     (Batch Ingestion)    │
+         └──────────────┬───────────┘     └──────────────┬───────────┘
+                        │                                │
+                        └──────────────┬─────────────────┘
+                                       ▼
+                               Bronze (Raw)
+                            GCS Landing Zone
+                                       ▼
+              ┌───────────────────────────────┬──────────────────────────────┐
+              │                               │                              │
+              ▼                               ▼                              │
+   ┌────────────────────────┐      ┌──────────────────────────────┐          │
+   │  Databricks (Spark     │      │        Dataproc (Batch)      │          │
+   │ Structured Streaming + │      │  SVI ingestion + large-scale │          │
+   │       Batch ETL)       │      │        PySpark transforms    │          │
+   └────────────────────────┘      └──────────────────────────────┘          │
+              └───────────────────────────────┬──────────────────────────────┘
+                                               ▼
+                                     Silver (Cleaned)
+                               Delta / Parquet stored in GCS
+                                               ▼
+                                    dbt → Snowflake (Gold)
+                              (Semantic Models + Metrics Layer)
+                                               ▼
+        ┌──────────────────────────────┬────────────────────────────┬────────────────────┐
+        ▼                              ▼                            ▼                    ▼
+ Power BI Dashboard        FastAPI RAG Service (LLM)           APIs / Apps           Other Consumers
+ (District Equity KPIs)    (Semantic Q&A on Gold Layer)
+
 ```
+
+```mermaid
+flowchart TB
+    subgraph Sources
+        K[Kafka\n(Real-time Streaming)]
+        R[REST API\n(Batch Ingestion)]
+    end
+
+    K --> B[Bronze (Raw)\nGCS Landing Zone]
+    R --> B
+
+    subgraph Compute
+        D[Databricks\nSpark Structured Streaming\n+ Batch ETL]
+        P[Dataproc\nBatch SVI Ingestion\n+ PySpark Transforms]
+    end
+
+    B --> D
+    B --> P
+    D --> S[Silver (Cleaned)\nDelta/Parquet on GCS]
+    P --> S
+
+    S --> G[dbt → Snowflake (Gold)\nSemantic Models + Metrics]
+
+    subgraph Consumers
+        PB[Power BI Dashboard\nEquity KPIs]
+        RAG[FastAPI RAG Service\n(LLM Semantic Q&A)]
+        OC[Other Consumers / APIs\nDownstream Pipelines]
+    end
+
+    G --> PB
+    G --> RAG
+    G --> OC```
+
+---
 
 ### Medallion Layers
 
@@ -77,23 +184,32 @@ A detailed architecture diagram is found in `/diagrams/`.
 **Storage** – GCS (Bronze/Silver)
 **Warehouse** – Snowflake
 **Transformations** – dbt
-**Orchestration** – Databricks Jobs
+**Orchestration** – Databricks Jobs, GitHub Actions
+**API / Services** – FastAPI (RAG microservice)
+**AI / RAG** – LangChain, OpenAI API (LLM & embeddings), Chroma (vector DB)
+**Frontend** – React, TypeScript, Vite
 **Visualization** – Power BI
-**DevOps** – Terraform, GitHub Actions, Makefile, pre-commit, detect-secrets
+**DevOps** – Terraform (IaC), Makefile, pre-commit, detect-secrets
 
 ---
 
 ## Repository Structure
 
 ```text
-root/
+rt-sch-cli-equity-pipeline/
 │
 ├── README.md
 ├── SECURITY.md
 ├── .gitignore
+├── .env.example
+├── Makefile
+├── pyproject.toml
+├── pre-commit-config.yaml
+├── LICENSE
 │
-├── infra/
+├── infra/                   # IaC for GCP, Snowflake, Databricks
 │   └── terraform/
+│       ├── main.tf
 │       ├── providers.tf
 │       ├── variables.tf
 │       ├── gcs.tf
@@ -101,29 +217,47 @@ root/
 │       ├── databricks.tf
 │       ├── dataproc.tf
 │       ├── gcp_snowflake_integration.tf
-│       ├── main.tf
 │       ├── terraform.tfvars.example
 │       └── terraform.dev.tfvars (ignored)
 │
-├── dbt/
+├── dbt/                     # dbt semantic modeling (Bronze → Silver → Gold)
 │   ├── models/
 │   │   ├── bronze/
 │   │   ├── silver/
 │   │   └── gold/
-│   ├── macros/
+│   ├── seeds/
 │   ├── tests/
-│   └── seeds/
+│   └── macros/
 │
-├── databricks/
-│   ├── bronze_to_silver_notebook.py
-│   ├── streaming/
-│   └── utils/
+├── dataproc/                # Batch SVI ingestion jobs (PySpark)
+│   ├── jobs/
+│   │   └── load_svi_to_snowflake.py
+│   ├── kafka_streaming.py
+│   └── config/
 │
-├── kafka/
+├── rag_service/             # FastAPI RAG microservice
+│   ├── main.py
+│   ├── api.py
+│   ├── prompts.py
+│   ├── langchain_chain.py
+│   ├── embeddings.py
+│   ├── ingest.py
+│   ├── vector_store.py
+│   └── config.py
+│
+├── rag-ui/                  # React/TypeScript RAG frontend
+│   ├── public/
+│   ├── src/
+│   ├── vite.config.ts
+│   └── .env.local (ignored)
+│
+├── kafka/                   # Local Kafka producer for mock streaming
 │   ├── kafka_producer.py
 │   └── config/
 │
-├── scripts/
+├── rt_databricks/           # Mirror of Databricks repo - Structured streaming + batch transforms
+│
+├── scripts/                 # Utility + integration scripts
 │   ├── gcp/
 │   ├── snowflake/
 │   └── utilities/
@@ -131,6 +265,7 @@ root/
 ├── powerbi/
 ├── diagrams/
 └── screenshots/
+
 ```
 
 ---
@@ -543,25 +678,27 @@ Key features:
 
 ## Roadmap
 
-* [ ] Add detailed table-level lineage diagram (Bronze → Silver → Gold, SVI + Climate models)
-* [ ] Add automated integration test suite (end-to-end tests hitting dev Snowflake / GCS)
-* [ ] Add Databricks Jobs API orchestration (trigger + monitor jobs via REST/SDK)
-* [ ] Add Docker local environment for reproducible dev + CI
-* [ ] Add Power BI refresh automation (triggered after successful ELT runs)
-* [ ] Integrate SVI dashboard and merge SVI data with School Climate data for cross-referenced equity analysis
+* \[\] Add detailed table-level lineage diagram (Bronze → Silver → Gold, SVI + Climate models)
+* \[\] Add automated integration test suite (end-to-end tests hitting dev Snowflake / GCS)
+* \[\] Add Databricks Jobs API orchestration (trigger + monitor jobs via REST/SDK)
+* \[\] Add Docker local environment for reproducible dev + CI
+* \[\] Add Power BI refresh automation (triggered after successful ELT runs)
+* \[\] Integrate SVI dashboard and merge SVI data with School Climate data for cross-referenced equity analysis
 
 ---
 
 ## License
 
-MIT License — free for personal and commercial use.
+This project is released under the **MIT License**.
+You are free to use, modify, and distribute this project for personal or commercial purposes.
+See the [LICENSE](LICENSE) file for full details.
 
 ---
 
 ## Author
 
-**Dylan Picart**
-Data Engineer & Analytics Engineer
+Developed by **Dylan Picart** at Partnership With Children
+**Data Engineer · Analytics Engineer · AI/ML Practitioner**
 
 * 🌐 Portfolio: [https://www.dylanpicart.com](https://www.dylanpicart.com)
-* 💼 LinkedIn: [https://linkedin.com/in/dylanpicart](https://linkedin.com/in/dylanpicart)
+* 💼 LinkedIn: [https://linkedin.com/in/dylankpicart](https://linkedin.com/in/dylankpicart)
