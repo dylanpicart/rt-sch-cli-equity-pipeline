@@ -51,4 +51,5 @@ screenshots/
 ├── Databricks_Silver_Test.png
 ├── GCP_Bucket_Directory_Structure.png
 ├── Snowflake_DB_Gold_Climate.png
+├── Lightweight_RAG_UI.png
 └── README.md```

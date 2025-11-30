@@ -16,7 +16,7 @@
 ![Databricks](https://img.shields.io/badge/Databricks-Spark%20Workspace-EF3E34?logo=databricks&logoColor=white)
 ![GCP](https://img.shields.io/badge/GCP-Cloud%20Platform-4285F4?logo=google-cloud&logoColor=white)
 
-## **Kafka · Databricks · Snowflake · dbt · FastAPI · LangChain · Chroma · React/TypeScript · Power BI · GCP · Terraform · CI/CD**
+## **Kafka · Dataproc · Databricks · Snowflake · dbt · FastAPI · LangChain · Chroma · React/TypeScript · Power BI · GCP · Terraform · CI/CD**
 
 > **Project Status:** Production-ready.
 
@@ -41,6 +41,7 @@
   * [3. Run batch ingestion (local)](#3-run-batch-ingestion-local)
   * [4. Run mock streaming ingestion (local)](#4-run-mock-streaming-ingestion-local)
 * [Databricks Integration](#databricks-integration)
+* [Dataproc (Batch SVI Ingestion)](#dataproc-batch-svi-ingestion)
 * [Terraform Infrastructure-as-Code (IaC)](#terraform-infrastructure-as-code-iac)
   * [**GCP**](#gcp)
   * [**Snowflake**](#snowflake)
@@ -316,6 +317,19 @@ Databricks powers the **real-time streaming** and large-scale batch side:
 * Databricks Secret Scopes for secure GCP + Snowflake integration
 * Configurable job cluster defined via **Terraform**
 * Orchestration via Databricks Jobs (auto-paused)
+
+---
+
+## Dataproc (Batch SVI Ingestion)
+
+Dataproc handles the **large-scale batch ingestion** of CDC Social Vulnerability Index (SVI) data:
+
+* PySpark job to ingest raw SVI files → GCS Bronze
+* Transform + normalize tract-level features → GCS Silver
+* Load into Snowflake external and internal tables (SVI semantic layer)
+* Provisioned and wired via Terraform (optional/feature-flagged)
+
+This keeps batch SVI processing **decoupled** from the Databricks streaming workloads while still landing in the same medallion architecture.
 
 ---
 
