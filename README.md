@@ -228,40 +228,6 @@ terraform plan -var-file="terraform.dev.tfvars"
 
 ---
 
-## CI (Continuous Integration)
-
-Located at `.github/workflows/ci.yml`.
-
-Runs on **every push + PR**:
-
-### **Pre-commit hooks**
-
-* whitespace cleanup
-* EOF fixes
-* YAML validation
-* **detect-secrets** scan
-* `black` formatting
-* `ruff` & `flake8` linting
-
-#### **Tests**
-
-* `pytest` (unit + integration)
-
-#### **dbt validation**
-
-* `dbt deps`
-* `dbt compile` (using a dummy CI profile—no Snowflake calls made)
-
-#### **Terraform validation**
-
-* `terraform fmt -check`
-* `terraform init -backend=false`
-* `terraform validate`
-
-All CI checks run **without secrets**.
-
----
-
 ## RAG Service – Semantic Q&A for SVI + School Climate
 
 This project includes a lightweight Retrieval-Augmented Generation (RAG) service that sits on top of the **GOLD** semantic layer and SVI tract data to provide leadership-friendly natural language answers to equity questions.
@@ -508,6 +474,40 @@ RAG transforms the pipeline from a traditional ETL/ELT system into a decision-su
 * Responses remain grounded in real district data
 * dbt ensures all definitions and metrics are consistent and validated
 * The semantic index makes unstructured domain context instantly searchable
+
+---
+
+## CI (Continuous Integration)
+
+Located at `.github/workflows/ci.yml`.
+
+Runs on **every push + PR**:
+
+### **Pre-commit hooks**
+
+* whitespace cleanup
+* EOF fixes
+* YAML validation
+* **detect-secrets** scan
+* `black` formatting
+* `ruff` & `flake8` linting
+
+#### **Tests**
+
+* `pytest` (unit + integration)
+
+#### **dbt validation**
+
+* `dbt deps`
+* `dbt compile` (using a dummy CI profile—no Snowflake calls made)
+
+#### **Terraform validation**
+
+* `terraform fmt -check`
+* `terraform init -backend=false`
+* `terraform validate`
+
+All CI checks run **without secrets**.
 
 ---
 
