@@ -82,17 +82,19 @@ Built as part of the **Data Engineering Modern Toolkit** initiative, the system 
 
 ## Purpose
 
-Many organizations still rely on siloed spreadsheets and manual workflows.
-This project demonstrates how to modernize those workflows using:
+Many organizations still rely on siloed spreadsheets, manual data merges, and ad-hoc reporting, making equity analysis slow, inconsistent, and difficult to scale.
+This project demonstrates how to modernize these workflows using a unified, cloud-native data and AI architecture:
 
 * **Streaming ingestion** (Kafka → GCS Bronze)
-* **Distributed compute** (Databricks Spark)
-* **Automated SQL transformations** (dbt)
-* **Cloud warehousing** (Snowflake)
+* **Batch ingestion** (REST API → GCS Bronze via Dataproc)
+* **Distributed compute** (Databricks Spark Structured Streaming + Dataproc PySpark)
+* **Automated SQL transformations & semantic modeling** (dbt)
+* **Cloud warehousing** (Snowflake Gold layer)
 * **Cross-platform orchestration** (Databricks Jobs + GitHub Actions)
 * **Enterprise-ready monitoring & visualization** (Power BI)
+* **AI-assisted analytics** (FastAPI + LangChain + Chroma RAG service)
 
-The result is a **scalable, reproducible, and secure** ELT pipeline suitable for real-world data engineering environments.
+The result is a **scalable, reproducible, and secure** ELT platform with a semantic, AI-driven analytics layer, suitable for production-grade data engineering environments and real-world decision-making.
 
 ---
 
@@ -135,29 +137,29 @@ The result is a **scalable, reproducible, and secure** ELT pipeline suitable for
 ```mermaid
 flowchart TB
     subgraph Sources
-        K[Kafka<br/>(Real-time Streaming)]
-        R[REST API<br/>(Batch Ingestion)]
+        K["Kafka<br/>(Real-time Streaming)"]
+        R["REST API<br/>(Batch Ingestion)"]
     end
 
-    K --> B[Bronze (Raw)<br/>GCS Landing Zone]
+    K --> B["Bronze (Raw)<br/>GCS Landing Zone"]
     R --> B
 
     subgraph Compute
-        D[Databricks<br/>Spark Structured Streaming<br/>+ Batch ETL]
-        P[Dataproc<br/>Batch SVI Ingestion<br/>+ PySpark Transforms]
+        D["Databricks<br/>Spark Structured Streaming<br/>+ Batch ETL"]
+        P["Dataproc<br/>Batch SVI Ingestion<br/>+ PySpark Transforms"]
     end
 
     B --> D
     B --> P
-    D --> S[Silver (Cleaned)<br/>Delta/Parquet on GCS]
+    D --> S["Silver (Cleaned)<br/>Delta/Parquet on GCS"]
     P --> S
 
-    S --> G[dbt -> Snowflake (Gold)<br/>Semantic Models + Metrics]
+    S --> G["dbt -> Snowflake (Gold)<br/>Semantic Models + Metrics"]
 
     subgraph Consumers
-        PB[Power BI Dashboard<br/>Equity KPIs]
-        RAG[FastAPI RAG Service<br/>(LLM Semantic Q&A)]
-        OC[Other Consumers / APIs<br/>Downstream Pipelines]
+        PB["Power BI Dashboard<br/>Equity KPIs"]
+        RAG["FastAPI RAG Service<br/>(LLM Semantic Q&A)"]
+        OC["Other Consumers / APIs<br/>Downstream Pipelines"]
     end
 
     G --> PB

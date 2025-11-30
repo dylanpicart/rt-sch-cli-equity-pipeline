@@ -82,34 +82,34 @@ GOLD.SCHOOL_CLIMATE_SNAPSHOT (optional metrics)
 
 ```mermaid
 flowchart TB
-    subgraph Snowflake_Gold["Snowflake Gold + SVI"]
-        Q[DIM_CLIMATE_QUESTION]
-        M[DIM_CLIMATE_METRIC_DEFINITION]
-        SVI[DIM_SVI_DEFINITION]
-        VULN[BRONZE_GOLD.GOLD_CLIMATE_VULNERABILITY]
-        SNAP[SCHOOL_CLIMATE_SNAPSHOT]
+    subgraph SnowflakeGold["Snowflake Gold + SVI"]
+        Q["DIM_CLIMATE_QUESTION"]
+        M["DIM_CLIMATE_METRIC_DEFINITION"]
+        SVI["DIM_SVI_DEFINITION"]
+        VULN["BRONZE_GOLD.GOLD_CLIMATE_VULNERABILITY"]
+        SNAP["SCHOOL_CLIMATE_SNAPSHOT"]
     end
 
-    Snowflake_Gold --> INGEST[rag_service.ingest<br/>(embedding + upsert)]
-    INGEST --> VDB[Chroma Vector DB<br/>(data/chroma_index)]
+    SnowflakeGold --> INGEST["rag_service.ingest<br/>(embedding + upsert)"]
+    INGEST --> VDB["Chroma Vector DB<br/>(data/chroma_index)"]
 
-    VDB --> RETRIEVER[LangChain Retriever<br/>+ Prompt Library (prompts.py)]
+    VDB --> RETRIEVER["LangChain Retriever<br/>+ Prompt Library (prompts.py)"]
     SNAP --> RETRIEVER
 
-    RETRIEVER --> API[FastAPI RAG API<br/>(api.py, langchain_chain.py)]
-    API --> UI[React/TypeScript UI<br/>(rag-ui)]
+    RETRIEVER --> API["FastAPI RAG API<br/>(api.py, langchain_chain.py)"]
+    API --> UI["React/TypeScript UI<br/>(rag-ui)"]
 
     subgraph Modes
-        O[district_risk_overview]
-        EM[explain_metric]
-        EQ[explain_question]
-        CD[compare_districts]
+        MODE_O["district_risk_overview"]
+        MODE_EM["explain_metric"]
+        MODE_EQ["explain_question"]
+        MODE_CD["compare_districts"]
     end
 
-    API --> O
-    API --> EM
-    API --> EQ
-    API --> CD
+    API --> MODE_O
+    API --> MODE_EM
+    API --> MODE_EQ
+    API --> MODE_CD
 ```
 
 ---
