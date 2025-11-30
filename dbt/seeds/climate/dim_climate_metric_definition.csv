@@ -1,0 +1,4 @@
+metric_name,metric_label,metric_group,definition_text,formula_text,source_table,grain,is_active
+PARENT_RESPONSE_RATE,"Parent Survey Response Rate","Engagement","Percent of invited parents/guardians who submitted a valid climate survey response.","num_parent_responses / num_parent_invited","SCHOOL_CLIMATE_SNAPSHOT","district_school_year",TRUE
+TEACHER_RESPONSE_RATE,"Teacher Survey Response Rate","Engagement","Percent of instructional staff who completed the climate survey.","num_teacher_responses / num_teacher_invited","SCHOOL_CLIMATE_SNAPSHOT","district_school_year",TRUE
+STUDENT_RESPONSE_RATE,"Student Survey Response Rate","Engagement","Percent of enrolled students who completed the climate survey.","num_student_responses / num_student_enrolled","SCHOOL_CLIMATE_SNAPSHOT","district_school_year",TRUE

@@ -262,6 +262,255 @@ All CI checks run **without secrets**.
 
 ---
 
+## RAG Service – Semantic Q&A for SVI + School Climate
+
+This project includes a lightweight Retrieval-Augmented Generation (RAG) service that sits on top of the **GOLD** semantic layer and SVI tract data to provide leadership-friendly natural language answers to equity questions.
+
+It supports multiple modes:
+
+* `district_risk_overview` – high-level risk + equity overview for a district
+* `explain_metric` – deep dive on what a metric means and why it matters
+* `explain_question` – deep dive on a climate survey question
+* `compare_districts` – equity-focused comparison of two districts (API-only for now)
+
+### Data sources used by the RAG layer
+
+The RAG service reads from:
+
+* `GOLD.DIM_CLIMATE_QUESTION`
+  Semantic question dimension (group, domain, short/full text, response scale).
+
+* `GOLD.DIM_CLIMATE_METRIC_DEFINITION`
+  Metric definitions (label, group, definition, formula, source table, grain).
+
+* `GOLD.DIM_SVI_DEFINITION`
+  SVI semantic layer (overall SVI, theme names/descriptions, bucket logic).
+
+* `BRONZE_GOLD.GOLD_CLIMATE_VULNERABILITY`
+  Tract-level SVI scores: `SVI_OVERALL_SCORE`, `SVI_OVERALL_BUCKET`, `RPL_THEME1–4`.
+
+* `GOLD.SCHOOL_CLIMATE_SNAPSHOT` (optional)
+  District-level climate metrics:
+  * `PARENT_RESPONSE_RATE`
+  * `TEACHER_RESPONSE_RATE`
+  * `STUDENT_RESPONSE_RATE`
+  * `DISTRICT_NUMBER`, `DBN`
+
+If `SCHOOL_CLIMATE_SNAPSHOT` is missing or inaccessible, the service degrades gracefully and responds without numeric metrics.
+
+### dbt seeds (semantic layer)
+
+The semantic layer is managed via dbt seeds:
+
+* `dbt/seeds/svi/dim_svi_definition.csv` → `GOLD.DIM_SVI_DEFINITION`
+* `dbt/seeds/climate/dim_climate_metric_definition.csv` → `GOLD.DIM_CLIMATE_METRIC_DEFINITION`
+* `dbt/seeds/climate/dim_climate_question.csv` → `GOLD.DIM_CLIMATE_QUESTION`
+
+To (re)seed:
+
+```bash
+cd dbt
+dbt seed --select dim_svi_definition dim_climate_metric_definition dim_climate_question \
+  --profiles-dir ../.dbt
+```
+
+### RAG service architecture
+
+```text
+GOLD.DIM_CLIMATE_QUESTION
+GOLD.DIM_CLIMATE_METRIC_DEFINITION
+GOLD.DIM_SVI_DEFINITION
+BRONZE_GOLD.GOLD_CLIMATE_VULNERABILITY
+                    │
+                    ▼
+           rag_service.ingest
+      (builds text corpus + embeddings)
+                    │
+                    ▼
+         Chroma vector store (data/chroma_index)
+                    │
+                    ▼
+           LangChain retriever + LLM
+                    │
+                    ▼
+    FastAPI (/api/rag/query, /api/status) → React UI (rag-ui)
+```
+
+### Dev vs Prod modes
+
+The RAG service supports both **offline/dev mode** and **real model mode** via environment flags in `.env`:
+
+```env
+# Embeddings
+USE_FAKE_EMBEDDINGS=true  # or false for real embeddings via OpenAI
+
+# LLM
+USE_FAKE_LLM=true         # or false for real LLM completions
+```
+
+* **Fake embeddings (`USE_FAKE_EMBEDDINGS=true`)**
+
+  * Uses a deterministic local `FakeEmbeddings` class
+  * No OpenAI embedding calls
+  * Good for testing ingestion, retrieval, and UI wiring
+
+* **Fake LLM (`USE_FAKE_LLM=true`)**
+
+  * Uses `FakeChatLLM`, which returns canned but structured text
+  * No OpenAI completion calls
+  * Perfect for offline dev / demos without any API usage
+
+When you’re ready to use real models:
+
+1. Set billing limits in OpenAI (e.g., soft: $3, hard: $10).
+
+2. Flip the flags in `.env`:
+
+   ```env
+   USE_FAKE_EMBEDDINGS=false
+   USE_FAKE_LLM=false
+   ```
+
+3. Rebuild embeddings once:
+
+   ```bash
+   python -m rag_service.ingest
+   ```
+
+4. Restart the backend:
+
+   ```bash
+   uvicorn rag_service.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+### Running the RAG backend
+
+From project root:
+
+```bash
+# Load env vars (including USE_FAKE_* and SNOWFLAKE_*):
+set -a
+source .env
+set +a
+
+# Start the API
+uvicorn rag_service.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Key endpoints:
+
+* `GET /api/status`
+  Returns backend mode:
+
+  ```json
+  {
+    "use_fake_embeddings": true,
+    "use_fake_llm": true,
+    "embedding_model": "text-embedding-3-large",
+    "llm_model": "gpt-4.1-mini"
+  }
+  ```
+
+* `POST /api/rag/query`
+  Body:
+
+  ```json
+  {
+    "question": "Provide a district-level risk and equity overview for District 29 using SVI and climate data.",
+    "district_id": 29,
+    "other_district_id": 30,        // optional, for compare_districts
+    "year": 2024,
+    "mode": "district_risk_overview"
+    // one of: "district_risk_overview", "explain_metric", "explain_question", "compare_districts"
+  }
+  ```
+
+  Response:
+
+  ```json
+  {
+    "answer": "High-level narrative...",
+    "high_level_bullets": ["Theme: ... – Metric: ... – Explanation: ...", "..."],
+    "metrics": [
+      {
+        "metric_name": "Average Parent Response Rate",
+        "value": 0.42,
+        "year": null,
+        "source": "SCHOOL_CLIMATE.GOLD.SCHOOL_CLIMATE_SNAPSHOT"
+      }
+    ],
+    "citations": [
+      {
+        "id": "svi_tract::36081000100",
+        "source_type": "svi_tract",
+        "source_id": "36081000100"
+      }
+    ]
+  }
+  ```
+
+### Frontend (rag-ui)
+
+The frontend lives in `rag-ui/` and talks to the RAG backend via Vite env vars:
+
+* `rag-ui/.env.local`:
+
+  ```env
+  VITE_API_BASE_URL=http://localhost:8000
+  VITE_FAKE_MODE=true   # purely for UI labeling; backend is authoritative
+  ```
+
+To run the UI:
+
+```bash
+cd rag-ui
+npm install   # first time
+npm run dev
+```
+
+Then visit: `http://localhost:5173`
+
+UI features:
+
+* Mode selector:
+
+  * `District risk overview`
+  * `Explain a metric`
+  * `Explain a question`
+* District + year filters
+* “Sample question” buttons per mode
+* “Ask” + “Clear” controls
+* Status badges:
+
+  * BACKEND: REAL/FAKE based on `/api/status`
+  * FRONTEND FAKE FLAG: based on `VITE_FAKE_MODE`
+
+## What RAG Adds
+
+* Semantic retrieval over climate + SVI domain knowledge
+* District-specific metrics pulled live from Snowflake
+* Human-readable equity explanations
+  * Risk indicators
+  * Metric interpretation
+  * Survey question analysis
+  * Optional district comparisons
+* Multiple modes:
+  * district_risk_overview
+  * explain_metric
+  * explain_question
+  * compare_districts
+
+## Why This Matters
+
+RAG transforms the pipeline from a traditional ETL/ELT system into a decision-support tool:
+
+* Leadership can ask complex equity questions in plain English
+* Responses remain grounded in real district data
+* dbt ensures all definitions and metrics are consistent and validated
+* The semantic index makes unstructured domain context instantly searchable
+
+---
+
 ## CD (Continuous Delivery — Manual Only)
 
 Located at `.github/workflows/cd.yml`.

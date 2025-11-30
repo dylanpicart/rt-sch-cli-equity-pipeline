@@ -1,0 +1,91 @@
+version: 2
+
+seeds:
+  - name: dim_climate_metric_definition
+    description: >
+      Semantic definitions for climate metrics used in SCHOOL_CLIMATE_SNAPSHOT,
+      including response rates and engagement KPIs.
+    columns:
+      - name: metric_name
+        description: Technical name of the metric (e.g. PARENT_RESPONSE_RATE).
+        tests:
+          - not_null
+          - unique
+
+      - name: metric_label
+        description: Human-readable label for use in BI tools.
+        tests:
+          - not_null
+
+      - name: metric_group
+        description: Logical grouping (e.g. Engagement, Participation).
+
+      - name: definition_text
+        description: Plain-language explanation of what the metric measures.
+
+      - name: formula_text
+        description: Description of how the metric is calculated (numerator/denominator).
+
+      - name: source_table
+        description: Name of the fact table where the metric is computed (e.g. SCHOOL_CLIMATE_SNAPSHOT).
+
+      - name: grain
+        description: >
+          Logical grain of the metric (e.g. district_school_year, school_year_dbn).
+
+      - name: is_active
+        description: Flag indicating whether this metric is currently in use.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [TRUE, False, false, true]
+
+  - name: dim_climate_question
+    description: >
+      Climate survey question dimension, containing survey group, domain,
+      and response scale metadata for questions used in climate analyses.
+    columns:
+      - name: question_id
+        description: Unique identifier for the survey question.
+        tests:
+          - not_null
+          - unique
+
+      - name: short_question_text
+        description: Short label or summary of the question.
+        tests:
+          - not_null
+
+      - name: full_question_text
+        description: Full text of the survey question.
+
+      - name: survey_group
+        description: >
+          Survey audience for the question (e.g. Student, Teacher, Parent).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Student", "Teacher", "Parent"]
+
+      - name: domain
+        description: >
+          Thematic domain of the question (e.g. Safety, Relationships, Family Engagement).
+
+      - name: response_scale
+        description: >
+          Description of the response options (e.g. "Strongly Disagree – Strongly Agree").
+        tests:
+          - not_null
+
+      - name: active_from_year
+        description: First year the question was active (inclusive).
+
+      - name: active_to_year
+        description: Last year the question was active (inclusive), or null if still active.
+
+      - name: is_active
+        description: Flag indicating whether the question is currently active.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [TRUE, False, false, true]

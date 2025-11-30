@@ -1,0 +1,44 @@
+version: 2
+
+seeds:
+  - name: dim_svi_definition
+    description: >
+      Semantic dimension for Social Vulnerability Index (SVI), including
+      overall score, four CDC SVI themes, bucket definitions, and tract identifier.
+    columns:
+      - name: theme_id
+        description: >
+          Identifier for the SVI concept (e.g. SVI_OVERALL, THEME1, THEME2, THEME3, THEME4, SVI_BUCKET, TRACT_FIPS).
+        tests:
+          - not_null
+          - unique
+
+      - name: theme_name
+        description: Human-readable name for the SVI theme or metric.
+        tests:
+          - not_null
+
+      - name: theme_description
+        description: Long-form description of what the SVI theme represents.
+
+      - name: metric_name
+        description: >
+          Name of the numeric/categorical field in GOLD_CLIMATE_VULNERABILITY
+          that this definition applies to (e.g. SVI_OVERALL_SCORE, RPL_THEME1).
+        tests:
+          - not_null
+
+      - name: metric_description
+        description: Human-readable explanation of the metric’s meaning.
+
+      - name: bucket_definition
+        description: >
+          Text describing how LOW/MEDIUM/HIGH (or other buckets) are defined,
+          usually in terms of SVI_OVERALL_SCORE ranges.
+
+      - name: is_active
+        description: Flag indicating whether this definition is currently in use.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [TRUE, False, false, true]

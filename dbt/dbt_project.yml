@@ -28,3 +28,21 @@ models:
       gold:
         +schema: "GOLD"
         +materialized: table
+
+# Seed configuration
+seeds:
+  school_climate:          # MUST match project name at top
+    +schema: "GOLD"        # default seed schema for this project
+    +quote_columns: false
+
+    svi:                   # matches seeds/svi/
+      +schema: "GOLD"
+      dim_svi_definition:  # matches seeds/svi/dim_svi_definition.csv
+        +schema: "GOLD"
+
+    climate:               # matches seeds/climate/
+      +schema: "GOLD"
+      dim_climate_metric_definition:   # seeds/climate/dim_climate_metric_definition.csv
+        +schema: "GOLD"
+      dim_climate_question:           # seeds/climate/dim_climate_question.csv
+        +schema: "GOLD"

@@ -1,0 +1,8 @@
+theme_id,theme_name,theme_description,metric_name,metric_description,bucket_definition,is_active
+SVI_OVERALL,"Overall SVI Score","Composite vulnerability index on a 0–1 scale representing overall social vulnerability.","SVI_OVERALL_SCORE","Numeric value between 0 and 1; higher values indicate greater vulnerability.","LOW (0–0.33), MEDIUM (0.34–0.66), HIGH (0.67–1.0)",TRUE
+THEME1,"Socioeconomic Status","Income, employment, poverty, and education levels.","RPL_THEME1","CDC RPL Theme 1 score; higher indicates greater socioeconomic vulnerability.","Same bucket thresholds as overall SVI.",TRUE
+THEME2,"Household Composition & Disability","Age, caregiving, disability, single-parent households.","RPL_THEME2","CDC RPL Theme 2 score; higher indicates more vulnerability.","Same bucket thresholds as overall SVI.",TRUE
+THEME3,"Minority Status & Language","Race/ethnicity distribution, English proficiency.","RPL_THEME3","CDC RPL Theme 3 score; higher indicates greater linguistic/cultural vulnerability.","Same bucket thresholds as overall SVI.",TRUE
+THEME4,"Housing Type & Transportation","Housing density, mobile homes, group quarters, vehicle access.","RPL_THEME4","CDC RPL Theme 4 score; higher indicates vulnerability in housing/transit.","Same bucket thresholds as overall SVI.",TRUE
+SVI_BUCKET,"SVI Risk Bucket","Categorical vulnerability grouping based on overall SVI score.","SVI_OVERALL_BUCKET","Categorical field ('LOW','MEDIUM','HIGH') derived from SVI_OVERALL_SCORE.","LOW = 0–0.33; MEDIUM = 0.34–0.66; HIGH = 0.67–1.0",TRUE
+TRACT_FIPS,"Census Tract Identifier","Unique census tract GEOID used for SVI scoring.","TRACT_FIPS","11-digit FIPS code for the census tract.","Not bucketed—identifier only.",TRUE

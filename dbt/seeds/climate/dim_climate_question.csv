@@ -1,0 +1,4 @@
+question_id,short_question_text,full_question_text,survey_group,domain,response_scale,active_from_year,active_to_year,is_active
+STU_SAFETY_01,"I feel safe in my school.","I feel safe in my school building.","Student","Safety","Strongly Disagree – Strongly Agree",2023,,TRUE
+STU_REL_01,"Adults respect students.","Adults in this school treat students with respect.","Student","Relationships","Strongly Disagree – Strongly Agree",2023,,TRUE
+FAM_ENG_01,"School keeps parents informed.","The school keeps me informed about my child’s progress and school events.","Parent","Family Engagement","Strongly Disagree – Strongly Agree",2023,,TRUE

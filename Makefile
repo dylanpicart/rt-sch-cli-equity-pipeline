@@ -170,6 +170,42 @@ dbt-run:
 dbt-test:
 	cd dbt && $(DBT) test
 
+	# =========================================================
+# RAG Service (Backend + UI)
+# =========================================================
+.PHONY: rag-dev rag-real-llm rag-full rag-ingest-real backend-dev ui
+
+# RAG dev mode: fake embeddings + fake LLM (no external API usage)
+rag-dev:
+	@echo ">>> RAG dev mode: fake embeddings + fake LLM (no OpenAI calls)"
+	USE_FAKE_EMBEDDINGS=true USE_FAKE_LLM=true $(PYTHON) -m rag_service.ingest
+	@echo ">>> Starting backend on http://0.0.0.0:8000 ..."
+	USE_FAKE_EMBEDDINGS=true USE_FAKE_LLM=true uvicorn rag_service.main:app --host 0.0.0.0 --port 8000 --reload
+
+# RAG mode: real LLM, fake embeddings (cheap semantic preview)
+rag-real-llm:
+	@echo ">>> RAG mode: real LLM (gpt-4.1-mini), fake embeddings (no embedding cost)"
+	@echo ">>> NOTE: You must have OPENAI_API_KEY and billing configured."
+	USE_FAKE_EMBEDDINGS=true USE_FAKE_LLM=false uvicorn rag_service.main:app --host 0.0.0.0 --port 8000 --reload
+
+# RAG full mode: real LLM + real embeddings
+rag-full:
+	@echo ">>> RAG full mode: real embeddings + real LLM (this may incur OpenAI cost)"
+	@echo ">>> Rebuilding embeddings with real model..."
+	USE_FAKE_EMBEDDINGS=false USE_FAKE_LLM=false $(PYTHON) -m rag_service.ingest
+	@echo ">>> Starting backend on http://0.0.0.0:8000 ..."
+	USE_FAKE_EMBEDDINGS=false USE_FAKE_LLM=false uvicorn rag_service.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Just run the backend using whatever is in .env (manual mode)
+backend-dev:
+	@echo ">>> Starting backend with .env configuration on http://0.0.0.0:8000 ..."
+	uvicorn rag_service.main:app --host 0.0.0.0 --port 8000 --reload
+
+# RAG UI (Vite dev server)
+ui:
+	@echo ">>> Starting rag-ui Vite dev server on http://localhost:5173 ..."
+	cd rag-ui && npm run dev
+
 # =========================================================
 # Help
 # =========================================================
