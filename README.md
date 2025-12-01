@@ -182,18 +182,18 @@ A detailed architecture diagram is found in `/diagrams/`.
 
 ## Technologies
 
-**Languages** – Python, SQL
-**Streaming** – Kafka (Confluent)
-**Compute** – Databricks (Spark Structured Streaming)
-**Storage** – GCS (Bronze/Silver)
-**Warehouse** – Snowflake
-**Transformations** – dbt
-**Orchestration** – Databricks Jobs, GitHub Actions
-**API / Services** – FastAPI (RAG microservice)
-**AI / RAG** – LangChain, OpenAI API (LLM & embeddings), Chroma (vector DB)
-**Frontend** – React, TypeScript, Vite
-**Visualization** – Power BI
-**DevOps** – Terraform (IaC), Makefile, pre-commit, detect-secrets
+* **Languages** – Python, SQL
+* **Streaming** – Kafka (Confluent)
+* **Compute** – Databricks (Spark Structured Streaming)
+* **Storage** – GCS (Bronze/Silver)
+* **Warehouse** – Snowflake
+* **Transformations** – dbt
+* **Orchestration** – Databricks Jobs, GitHub Actions
+* **API / Services** – FastAPI (RAG microservice)
+* **AI / RAG** – LangChain, OpenAI API (LLM & embeddings), Chroma (vector DB)
+* **Frontend** – React, TypeScript, Vite
+* **Visualization** – Power BI
+* **DevOps** – Terraform (IaC), Makefile, pre-commit, detect-secrets
 
 ---
 
@@ -695,12 +695,12 @@ Key features:
 
 ## Roadmap
 
-* \[\] Add detailed table-level lineage diagram (Bronze → Silver → Gold, SVI + Climate models)
-* \[\] Add automated integration test suite (end-to-end tests hitting dev Snowflake / GCS)
-* \[\] Add Databricks Jobs API orchestration (trigger + monitor jobs via REST/SDK)
-* \[\] Add Docker local environment for reproducible dev + CI
-* \[\] Add Power BI refresh automation (triggered after successful ELT runs)
-* \[\] Integrate SVI dashboard and merge SVI data with School Climate data for cross-referenced equity analysis
+\[\] Add detailed table-level lineage diagram (Bronze → Silver → Gold, SVI + Climate models)
+\[\] Add automated integration test suite (end-to-end tests hitting dev Snowflake / GCS)
+\[\] Add Databricks Jobs API orchestration (trigger + monitor jobs via REST/SDK)
+\[\] Add Docker local environment for reproducible dev + CI
+\[\] Add Power BI refresh automation (triggered after successful ELT runs)
+\[\] Integrate SVI dashboard and merge SVI data with School Climate data for cross-referenced equity analysis
 
 ---
 
